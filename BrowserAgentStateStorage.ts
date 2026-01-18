@@ -1,12 +1,12 @@
 import type {
-	AgentCheckpointListItem,
-	AgentCheckpointProvider,
-	NamedAgentCheckpoint,
-	StoredAgentCheckpoint,
+  AgentCheckpointListItem,
+  AgentCheckpointProvider,
+  NamedAgentCheckpoint,
+  StoredAgentCheckpoint,
 } from "@tokenring-ai/checkpoint/AgentCheckpointProvider";
 
-import { v4 as uuid } from 'uuid';
-import { z } from "zod";
+import {v4 as uuid} from 'uuid';
+import {z} from "zod";
 
 const DEFAULT_AGENT_STATE_PREFIX = "tokenRingAgentState_v1_";
 
