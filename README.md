@@ -28,13 +28,10 @@ bun install @tokenring-ai/browser-agent-storage
 ```
 pkg/browser-agent-storage/
 ├── BrowserAgentStateStorage.ts      # Core storage implementation
-├── BrowserAgentStateStorage.test.ts # Unit tests
-├── integration.test.ts              # Integration tests
-├── plugin.ts                        # TokenRing plugin integration
 ├── index.ts                         # Module exports
+├── plugin.ts                        # TokenRing plugin integration
 ├── package.json                     # Package configuration
-├── vitest.config.ts                 # Test configuration
-└── README.md                        # This documentation
+└── vitest.config.ts                 # Test configuration
 ```
 
 ## Core Components
@@ -122,6 +119,8 @@ const storage = new BrowserAgentStateStorage({
 
 ### Integration with TokenRing
 
+The plugin automatically registers the browser storage provider when configured:
+
 ```typescript
 // In your TokenRing app configuration
 const app = new TokenRingApp({
@@ -156,7 +155,7 @@ const featureCheckpoint = {
   agentId: 'dev-agent-001',
   name: 'feature-implementation',
   config: { model: 'gpt-4', temperature: 0.8 },
-  state: { 
+  state: {
     messages: [{ role: 'user', content: 'Implement todo feature' }],
     context: { project: 'todo-app', phase: 'feature-development' }
   },
@@ -171,6 +170,53 @@ await storage.storeCheckpoint(featureCheckpoint);
 const checkpoints = await storage.listCheckpoints();
 console.log('Development checkpoints:', checkpoints);
 ```
+
+## Plugin Integration
+
+### Plugin Configuration
+
+The package includes a TokenRing plugin that automatically registers the browser storage provider. The plugin configuration schema is:
+
+```typescript
+interface BrowserAgentStoragePluginConfig {
+  checkpoint?: {
+    provider?: {
+      type: "browser";
+      storageKeyPrefix?: string;
+    };
+  };
+}
+```
+
+### Plugin Registration
+
+The plugin is automatically loaded when using the TokenRing package manager. To use it manually:
+
+```typescript
+import BrowserAgentStoragePlugin from '@tokenring-ai/browser-agent-storage';
+
+const app = new TokenRingApp({
+  plugins: [
+    BrowserAgentStoragePlugin({
+      checkpoint: {
+        provider: {
+          type: "browser",
+          storageKeyPrefix: "myapp_"
+        }
+      }
+    })
+  ]
+});
+```
+
+### Plugin Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| name | string | Plugin name (`"@tokenring-ai/browser-agent-storage"`) |
+| version | string | Package version (`"0.2.0"`) |
+| description | string | Package description |
+| config | ZodSchema | Plugin configuration schema |
 
 ## API Reference
 
