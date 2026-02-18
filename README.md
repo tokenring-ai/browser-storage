@@ -10,7 +10,7 @@ The Browser Agent Storage package implements a browser-based storage provider fo
 
 - **Browser-based Storage**: Uses localStorage for persistent agent state storage
 - **Checkpoint Management**: Full CRUD operations for agent state checkpoints
-- **TokenRing Integration**: Seamlessly integrates with the TokenRing checkpoint system
+- **TokenRing Integration**: Seamlessly integrates with the TokenRing checkpoint system via the `AgentCheckpointProvider` interface
 - **Agent-specific Storage**: Maintains isolated storage per agent with configurable prefixes
 - **Cross-platform Compatibility**: Works across all modern browsers supporting localStorage
 - **Type-safe Implementation**: Full TypeScript support with Zod schema validation
@@ -68,6 +68,7 @@ Each checkpoint contains:
 | config | object | Agent configuration at checkpoint time |
 | state | object | Agent state data |
 | createdAt | number | Timestamp of checkpoint creation |
+| previousResponseId | string | Optional ID of the previous response |
 
 ## Usage Examples
 
@@ -178,14 +179,19 @@ console.log('Development checkpoints:', checkpoints);
 The package includes a TokenRing plugin that automatically registers the browser storage provider. The plugin configuration schema is:
 
 ```typescript
-interface BrowserAgentStoragePluginConfig {
-  checkpoint?: {
-    provider?: {
-      type: "browser";
-      storageKeyPrefix?: string;
-    };
-  };
-}
+import {z} from "zod";
+import {CheckpointConfigSchema} from "@tokenring-ai/checkpoint";
+
+const packageConfigSchema = z.object({
+  checkpoint: CheckpointConfigSchema.optional(),
+});
+
+// CheckpointConfigSchema from @tokenring-ai/checkpoint:
+const checkpointConfigSchema = z.object({
+  provider: z.looseObject({
+    type: z.string()
+  })
+});
 ```
 
 ### Plugin Registration
@@ -311,32 +317,65 @@ close(): void
 
 ## Configuration
 
-### BrowserAgentStateStorageOptions
+### BrowserAgentStateStorageOptionsSchema
+
+The package exports a Zod schema for validating storage options:
 
 ```typescript
-interface BrowserAgentStateStorageOptions {
-  storageKeyPrefix?: string; // Optional, defaults to "tokenRingAgentState_v1_"
-}
+import { BrowserAgentStateStorageOptionsSchema } from '@tokenring-ai/browser-agent-storage';
+
+// The schema validates storageKeyPrefix (optional, defaults to "tokenRingAgentState_v1_")
+const validatedOptions = BrowserAgentStateStorageOptionsSchema.parse({
+  storageKeyPrefix: 'custom_prefix_'
+});
 ```
 
 ### TokenRing Integration
 
+The package integrates with the TokenRing checkpoint system using the standard checkpoint configuration schema:
+
 ```typescript
-interface TokenRingCheckpointConfig {
-  checkpoint: {
-    provider: {
-      type: "browser";
-      storageKeyPrefix?: string; // Optional custom prefix
-    }
+import { CheckpointConfigSchema } from '@tokenring-ai/checkpoint';
+
+// Checkpoint provider configuration
+const checkpointConfig = CheckpointConfigSchema.parse({
+  provider: {
+    type: "browser",
+    storageKeyPrefix: "myapp_"
   }
+});
+```
+
+### AgentCheckpointProvider Interface
+
+The package implements the `AgentCheckpointProvider` interface from `@tokenring-ai/checkpoint`:
+
+```typescript
+import type {
+  NamedAgentCheckpoint,
+  StoredAgentCheckpoint,
+  AgentCheckpointListItem
+} from '@tokenring-ai/checkpoint/AgentCheckpointProvider';
+
+// Checkpoint with name
+interface NamedAgentCheckpoint extends AgentCheckpointData {
+  name: string;
 }
+
+// Checkpoint with storage ID
+interface StoredAgentCheckpoint extends NamedAgentCheckpoint {
+  id: string;
+}
+
+// Checkpoint listing item (minimal info)
+type AgentCheckpointListItem = Omit<StoredAgentCheckpoint, "state" | "config">;
 ```
 
 ## Development
 
 ### Testing
 
-The package includes Vitest configuration for testing:
+The package includes comprehensive Vitest configuration for testing:
 
 ```bash
 # Run tests
