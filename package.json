@@ -1,6 +1,6 @@
 {
-  "name": "@tokenring-ai/browser-agent-storage",
-  "description": "Provides browser-based agent state storage for the TokenRing ecosystem.",
+  "name": "@tokenring-ai/browser-storage",
+  "description": "Provides browser-based storage for the TokenRing ecosystem.",
   "version": "0.2.0",
   "dependencies": {
     "@tokenring-ai/agent": "0.2.0",

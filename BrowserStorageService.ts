@@ -1,3 +1,4 @@
+import type {TokenRingService} from "@tokenring-ai/app/types";
 import type {
   AgentCheckpointListItem,
   AgentCheckpointProvider,
@@ -6,13 +7,7 @@ import type {
 } from "@tokenring-ai/checkpoint/AgentCheckpointProvider";
 
 import {v4 as uuid} from 'uuid';
-import {z} from "zod";
-
-const DEFAULT_AGENT_STATE_PREFIX = "tokenRingAgentState_v1_";
-
-export const BrowserAgentStateStorageOptionsSchema = z.object({
-	storageKeyPrefix: z.string().optional().default(DEFAULT_AGENT_STATE_PREFIX),
-});
+import type {ParsedBrowserStorageConfig} from "./schema.ts";
 
 /**
  * Browser-based implementation of AgentCheckpointProvider that uses localStorage
@@ -25,7 +20,7 @@ export const BrowserAgentStateStorageOptionsSchema = z.object({
  * - Provides agent-specific checkpoint management
  *
  * Storage Structure:
- * - Checkpoints stored under AGENT_STATE_STORAGE_KEY_PREFIX + agentId
+ * - Checkpoints stored under options.storageKeyPrefix + agentId
  *
  * Limitations:
  * - Limited by browser localStorage size constraints
@@ -34,23 +29,17 @@ export const BrowserAgentStateStorageOptionsSchema = z.object({
  *
  * @implements AgentCheckpointProvider
  */
-export default class BrowserAgentStateStorage
-	implements AgentCheckpointProvider
-{
+export default class BrowserStorageService implements TokenRingService, AgentCheckpointProvider {
 	name: string = "BrowserAgentStateStorage";
-	storageKeyPrefix: string;
+  description: string = "Browser-based implementation of AgentCheckpointProvider that uses localStorage for persistent storage of agent state checkpoints.";
+  displayName: string;
 
 	/**
-	 * Creates a new BrowserAgentStateStorage instance.
-	 * @param storageKeyPrefix - Optional prefix for localStorage keys to achieve isolation.
-	 */
-	constructor({
-		storageKeyPrefix,
-	}: z.infer<typeof BrowserAgentStateStorageOptionsSchema>) {
-		this.storageKeyPrefix = storageKeyPrefix || DEFAULT_AGENT_STATE_PREFIX;
-		console.log(
-			`BrowserAgentStateStorage initialized with prefix: '${this.storageKeyPrefix}'`,
-		);
+   * Creates a new BrowserAgentStateStorage instance.
+   * @param options
+   */
+	constructor(readonly options: ParsedBrowserStorageConfig) {
+    this.displayName = `BrowserAgentStateStorage (${this.options.storageKeyPrefix})`;
 	}
 
 	/**
@@ -59,7 +48,7 @@ export default class BrowserAgentStateStorage
 	 * @returns The localStorage key
 	 */
 	_getStorageKey(): string {
-		return `${this.storageKeyPrefix}checkpoints`;
+		return `${this.options.storageKeyPrefix}checkpoints`;
 	}
 
 	/**
@@ -117,7 +106,7 @@ export default class BrowserAgentStateStorage
 		checkpoints.push(storedCheckpoint);
 		this._saveAllCheckpoints(checkpoints);
 
-		return Promise.resolve(id);
+		return id;
 	}
 
 	/**
@@ -131,7 +120,7 @@ export default class BrowserAgentStateStorage
 	): Promise<StoredAgentCheckpoint | null> {
 		const checkpoints = this._getAllCheckpoints();
 		const checkpoint = checkpoints.find((cp) => cp.id === checkpointId);
-		return Promise.resolve(checkpoint || null);
+		return checkpoint ?? null;
 	}
 
 	/**
@@ -149,7 +138,7 @@ export default class BrowserAgentStateStorage
 			createdAt: cp.createdAt,
 		}));
 
-		return Promise.resolve(listItems.sort((a, b) => b.createdAt - a.createdAt));
+		return listItems.sort((a, b) => b.createdAt - a.createdAt);
 	}
 
 	/**
@@ -160,7 +149,6 @@ export default class BrowserAgentStateStorage
 	 */
 	async clearAllCheckpoints(): Promise<void> {
 		this._saveAllCheckpoints([]);
-		return Promise.resolve();
 	}
 
 	/**
@@ -177,10 +165,10 @@ export default class BrowserAgentStateStorage
 
 		if (filtered.length < initialLength) {
 			this._saveAllCheckpoints(filtered);
-			return Promise.resolve(true);
+			return true;
 		}
 
-		return Promise.resolve(false);
+		return false;
 	}
 
 	/**

@@ -1,6 +1,6 @@
 import type {NamedAgentCheckpoint, StoredAgentCheckpoint,} from '@tokenring-ai/checkpoint/AgentCheckpointProvider';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import BrowserAgentStateStorage from './BrowserAgentStateStorage';
+import BrowserStorageService from './BrowserStorageService';
 
 // Mock localStorage for integration tests
 interface LocalStorageMock {
@@ -26,7 +26,7 @@ const localStorageMock: LocalStorageMock = {
 const originalLocalStorage = globalThis.localStorage;
 
 describe('BrowserAgentStateStorage Integration Tests', () => {
-  let storage: BrowserAgentStateStorage;
+  let storage: BrowserStorageService;
   let mockStorageData: Record<string, string>;
 
   beforeEach(() => {
@@ -57,7 +57,7 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
 
   describe('Real-world usage scenarios', () => {
     beforeEach(() => {
-      storage = new BrowserAgentStateStorage({});
+      storage = new BrowserStorageService({});
     });
 
     it('should handle agent development workflow', async () => {
@@ -246,11 +246,11 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
     });
 
     it('should handle multiple agents with different prefixes', async () => {
-      const devStorage = new BrowserAgentStateStorage({
+      const devStorage = new BrowserStorageService({
         storageKeyPrefix: 'dev_agents_',
       });
 
-      const contentStorage = new BrowserAgentStateStorage({
+      const contentStorage = new BrowserStorageService({
         storageKeyPrefix: 'content_agents_',
       });
 
@@ -426,7 +426,7 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
 
   describe('Performance scenarios', () => {
     it('should handle rapid checkpoint creation', async () => {
-      storage = new BrowserAgentStateStorage({});
+      storage = new BrowserStorageService({});
 
       const startTime = Date.now();
       const checkpointIds: string[] = [];
@@ -461,7 +461,7 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
     });
 
     it('should handle batch operations efficiently', async () => {
-      storage = new BrowserAgentStateStorage({
+      storage = new BrowserStorageService({
         storageKeyPrefix: 'batch_test_',
       });
 

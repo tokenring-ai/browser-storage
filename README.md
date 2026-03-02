@@ -20,13 +20,13 @@ The Browser Agent Storage package implements a browser-based storage provider fo
 ## Installation
 
 ```bash
-bun install @tokenring-ai/browser-agent-storage
+bun install @tokenring-ai/browser-storage
 ```
 
 ## Package Structure
 
 ```
-pkg/browser-agent-storage/
+pkg/browser-storage/
 ├── BrowserAgentStateStorage.ts      # Core storage implementation
 ├── index.ts                         # Module exports
 ├── plugin.ts                        # TokenRing plugin integration
@@ -43,7 +43,7 @@ pkg/browser-agent-storage/
 The main storage class that implements the `AgentCheckpointProvider` interface for browser-based storage:
 
 ```typescript
-import { BrowserAgentStateStorage } from '@tokenring-ai/browser-agent-storage';
+import { BrowserAgentStateStorage } from '@tokenring-ai/browser-storage';
 
 const storage = new BrowserAgentStateStorage({
   storageKeyPrefix: 'myApp_', // Optional custom prefix
@@ -82,10 +82,10 @@ The package exports the following types and interfaces:
 
 ```typescript
 // Main class
-import BrowserAgentStateStorage from '@tokenring-ai/browser-agent-storage';
+import BrowserAgentStateStorage from '@tokenring-ai/browser-storage';
 
 // Zod schema for validation
-import { BrowserAgentStateStorageOptionsSchema } from '@tokenring-ai/browser-agent-storage';
+import { BrowserAgentStateStorageOptionsSchema } from '@tokenring-ai/browser-storage';
 
 // Checkpoint types from @tokenring-ai/checkpoint
 import type {
@@ -125,7 +125,7 @@ type AgentCheckpointListItem = Omit<StoredAgentCheckpoint, "state" | "config">;
 ### Basic Storage Operations
 
 ```typescript
-import { BrowserAgentStateStorage } from '@tokenring-ai/browser-agent-storage';
+import { BrowserAgentStateStorage } from '@tokenring-ai/browser-storage';
 
 // Initialize storage with default prefix
 const storage = new BrowserAgentStateStorage({});
@@ -158,7 +158,7 @@ console.log('Deleted:', deleted);
 ### Custom Storage Prefix
 
 ```typescript
-import { BrowserAgentStateStorage } from '@tokenring-ai/browser-agent-storage';
+import { BrowserAgentStateStorage } from '@tokenring-ai/browser-storage';
 
 // Use custom prefix for isolation between applications
 const storage = new BrowserAgentStateStorage({
@@ -172,7 +172,7 @@ const storage = new BrowserAgentStateStorage({
 ### Multiple Agents with Isolation
 
 ```typescript
-import { BrowserAgentStateStorage } from '@tokenring-ai/browser-agent-storage';
+import { BrowserAgentStateStorage } from '@tokenring-ai/browser-storage';
 
 // Development agents
 const devStorage = new BrowserAgentStateStorage({
@@ -235,7 +235,7 @@ const app = new TokenRingApp({
 ### Real-world Development Workflow
 
 ```typescript
-import { BrowserAgentStateStorage } from '@tokenring-ai/browser-agent-storage';
+import { BrowserAgentStateStorage } from '@tokenring-ai/browser-storage';
 
 const storage = new BrowserAgentStateStorage({});
 
@@ -295,7 +295,7 @@ await storage.clearAllCheckpoints();
 ### Error Handling
 
 ```typescript
-import { BrowserAgentStateStorage } from '@tokenring-ai/browser-agent-storage';
+import { BrowserAgentStateStorage } from '@tokenring-ai/browser-storage';
 
 const storage = new BrowserAgentStateStorage({});
 
@@ -348,7 +348,7 @@ const checkpointConfigSchema = z.object({
 The plugin is automatically loaded when using the TokenRing package manager. To use it manually:
 
 ```typescript
-import BrowserAgentStoragePlugin from '@tokenring-ai/browser-agent-storage/plugin';
+import BrowserAgentStoragePlugin from '@tokenring-ai/browser-storage/plugin';
 
 const app = new TokenRingApp({
   plugins: [
@@ -368,7 +368,7 @@ const app = new TokenRingApp({
 
 | Property | Type | Description |
 |----------|------|-------------|
-| name | string | Plugin name (`"@tokenring-ai/browser-agent-storage"`) |
+| name | string | Plugin name (`"@tokenring-ai/browser-storage"`) |
 | version | string | Package version (`"0.2.0"`) |
 | description | string | Package description |
 | config | ZodSchema | Plugin configuration schema |
@@ -531,7 +531,7 @@ storage.close();
 The package exports a Zod schema for validating storage options:
 
 ```typescript
-import { BrowserAgentStateStorageOptionsSchema } from '@tokenring-ai/browser-agent-storage';
+import { BrowserAgentStateStorageOptionsSchema } from '@tokenring-ai/browser-storage';
 
 // The schema validates storageKeyPrefix (optional, defaults to "tokenRingAgentState_v1_")
 const validatedOptions = BrowserAgentStateStorageOptionsSchema.parse({

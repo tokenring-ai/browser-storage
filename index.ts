@@ -1,3 +1,3 @@
-export { default as BrowserAgentStateStorage } from "./BrowserAgentStateStorage.ts";
+export { default as BrowserStorageService } from "./BrowserStorageService.ts";
 
 
