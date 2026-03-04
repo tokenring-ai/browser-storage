@@ -1,10 +1,10 @@
 import type {TokenRingService} from "@tokenring-ai/app/types";
 import type {
   AgentCheckpointListItem,
-  AgentCheckpointProvider,
+  AgentCheckpointStorage,
   NamedAgentCheckpoint,
   StoredAgentCheckpoint,
-} from "@tokenring-ai/checkpoint/AgentCheckpointProvider";
+} from "@tokenring-ai/checkpoint/AgentCheckpointStorage";
 
 import {v4 as uuid} from 'uuid';
 import type {ParsedBrowserStorageConfig} from "./schema.ts";
@@ -27,9 +27,9 @@ import type {ParsedBrowserStorageConfig} from "./schema.ts";
  * - Data is tied to specific browser/domain
  * - No server-side persistence or cross-device synchronization
  *
- * @implements AgentCheckpointProvider
+ * @implements AgentCheckpointStorage
  */
-export default class BrowserStorageService implements TokenRingService, AgentCheckpointProvider {
+export default class BrowserStorageService implements TokenRingService, AgentCheckpointStorage {
 	name: string = "BrowserAgentStateStorage";
   description: string = "Browser-based implementation of AgentCheckpointProvider that uses localStorage for persistent storage of agent state checkpoints.";
   displayName: string;
@@ -98,7 +98,8 @@ export default class BrowserStorageService implements TokenRingService, AgentChe
 			id,
 			agentId: checkpoint.agentId,
 			name: checkpoint.name,
-			config: checkpoint.config,
+      agentType: checkpoint.agentType,
+      sessionId: checkpoint.sessionId,
 			state: checkpoint.state,
 			createdAt: checkpoint.createdAt || now,
 		};
@@ -133,7 +134,8 @@ export default class BrowserStorageService implements TokenRingService, AgentChe
 		const listItems: AgentCheckpointListItem[] = checkpoints.map((cp) => ({
 			id: cp.id,
 			name: cp.name,
-			config: cp.config,
+      sessionId: cp.sessionId,
+      agentType: cp.agentType,
 			agentId: cp.agentId,
 			createdAt: cp.createdAt,
 		}));

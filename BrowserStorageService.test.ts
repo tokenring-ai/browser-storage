@@ -1,4 +1,4 @@
-import type {NamedAgentCheckpoint, StoredAgentCheckpoint,} from '@tokenring-ai/checkpoint/AgentCheckpointProvider';
+import type {NamedAgentCheckpoint, StoredAgentCheckpoint,} from '@tokenring-ai/checkpoint/AgentCheckpointStorage';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import BrowserStorageService from './BrowserStorageService';
 
