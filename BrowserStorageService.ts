@@ -89,7 +89,7 @@ export default class BrowserStorageService implements TokenRingService, AgentChe
 	 * @param checkpoint - The checkpoint to store
 	 * @returns The ID of the stored checkpoint
 	 */
-	async storeCheckpoint(checkpoint: NamedAgentCheckpoint): Promise<string> {
+	async storeAgentCheckpoint(checkpoint: NamedAgentCheckpoint): Promise<string> {
 		const checkpoints = this._getAllCheckpoints();
 		const now = Date.now();
 		const id = uuid();
@@ -116,7 +116,7 @@ export default class BrowserStorageService implements TokenRingService, AgentChe
 	 * @param checkpointId - The checkpoint identifier
 	 * @returns The retrieved checkpoint or null if not found
 	 */
-	async retrieveCheckpoint(
+	async retrieveAgentCheckpoint(
 		checkpointId: string,
 	): Promise<StoredAgentCheckpoint | null> {
 		const checkpoints = this._getAllCheckpoints();
@@ -129,7 +129,7 @@ export default class BrowserStorageService implements TokenRingService, AgentChe
 	 *
 	 * @returns Array of checkpoint list items
 	 */
-	async listCheckpoints(): Promise<AgentCheckpointListItem[]> {
+	async listAgentCheckpoints(): Promise<AgentCheckpointListItem[]> {
 		const checkpoints = this._getAllCheckpoints();
 		const listItems: AgentCheckpointListItem[] = checkpoints.map((cp) => ({
 			id: cp.id,

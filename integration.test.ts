@@ -82,7 +82,7 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
         createdAt: Date.now() - 3600000, // 1 hour ago
       };
 
-      const initialId = await storage.storeCheckpoint(initialCheckpoint);
+      const initialId = await storage.storeAgentCheckpoint(initialCheckpoint);
       expect(initialId).toMatch(/-/);
 
       // 2. Feature implementation checkpoint
@@ -108,7 +108,7 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
         createdAt: Date.now() - 1800000, // 30 minutes ago
       };
 
-      const featureId = await storage.storeCheckpoint(featureCheckpoint);
+      const featureId = await storage.storeAgentCheckpoint(featureCheckpoint);
 
       // 3. Testing phase checkpoint
       const testingCheckpoint: NamedAgentCheckpoint = {
@@ -134,10 +134,10 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
         createdAt: Date.now() - 600000, // 10 minutes ago
       };
 
-      const testingId = await storage.storeCheckpoint(testingCheckpoint);
+      const testingId = await storage.storeAgentCheckpoint(testingCheckpoint);
 
       // Verify all checkpoints are stored
-      const allCheckpoints = await storage.listCheckpoints();
+      const allCheckpoints = await storage.listAgentCheckpoints();
       expect(allCheckpoints).toHaveLength(3);
 
       // Verify they are ordered by creation time (newest first)
@@ -146,7 +146,7 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       expect(allCheckpoints[2].createdAt).toBe(initialCheckpoint.createdAt);
 
       // Verify individual checkpoint retrieval
-      const retrievedTesting = await storage.retrieveCheckpoint(testingId);
+      const retrievedTesting = await storage.retrieveAgentCheckpoint(testingId);
       expect(retrievedTesting).not.toBeNull();
       expect(retrievedTesting!.name).toBe('testing-phase');
       expect(retrievedTesting!.config.temperature).toBe(0.3);
@@ -156,7 +156,7 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       const deleted = await storage.deleteCheckpoint(initialId);
       expect(deleted).toBe(true);
 
-      const remainingCheckpoints = await storage.listCheckpoints();
+      const remainingCheckpoints = await storage.listAgentCheckpoints();
       expect(remainingCheckpoints).toHaveLength(2);
     });
 
@@ -229,19 +229,19 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
         createdAt: Date.now() - 600000, // 10 minutes ago
       };
 
-      const planningId = await storage.storeCheckpoint(planningCheckpoint);
-      const draftingId = await storage.storeCheckpoint(draftingCheckpoint);
-      const finalizingId = await storage.storeCheckpoint(finalizingCheckpoint);
+      const planningId = await storage.storeAgentCheckpoint(planningCheckpoint);
+      const draftingId = await storage.storeAgentCheckpoint(draftingCheckpoint);
+      const finalizingId = await storage.storeAgentCheckpoint(finalizingCheckpoint);
 
       // Verify workflow progression
-      const checkpoints = await storage.listCheckpoints();
+      const checkpoints = await storage.listAgentCheckpoints();
       expect(checkpoints).toHaveLength(3);
 
       // Verify the progression through phases
-      const retrievedFinal = await storage.retrieveCheckpoint(finalizingId);
+      const retrievedFinal = await storage.retrieveAgentCheckpoint(finalizingId);
       expect(retrievedFinal!.state.context.status).toBe('final');
 
-      const retrievedDraft = await storage.retrieveCheckpoint(draftingId);
+      const retrievedDraft = await storage.retrieveAgentCheckpoint(draftingId);
       expect(retrievedDraft!.state.context.status).toBe('draft');
     });
 
@@ -270,12 +270,12 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
         createdAt: Date.now() - 900000,
       };
 
-      const devId = await devStorage.storeCheckpoint(devCheckpoint);
-      const contentId = await contentStorage.storeCheckpoint(contentCheckpoint);
+      const devId = await devStorage.storeAgentCheckpoint(devCheckpoint);
+      const contentId = await contentStorage.storeAgentCheckpoint(contentCheckpoint);
 
       // Verify isolation
-      const devCheckpoints = await devStorage.listCheckpoints();
-      const contentCheckpoints = await contentStorage.listCheckpoints();
+      const devCheckpoints = await devStorage.listAgentCheckpoints();
+      const contentCheckpoints = await contentStorage.listAgentCheckpoints();
 
       expect(devCheckpoints).toHaveLength(1);
       expect(contentCheckpoints).toHaveLength(1);
@@ -283,8 +283,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       expect(contentCheckpoints[0].id).toBe(contentId);
 
       // Verify cross-storage retrieval returns null
-      const devInContent = await contentStorage.retrieveCheckpoint(devId);
-      const contentInDev = await devStorage.retrieveCheckpoint(contentId);
+      const devInContent = await contentStorage.retrieveAgentCheckpoint(devId);
+      const contentInDev = await devStorage.retrieveAgentCheckpoint(contentId);
 
       expect(devInContent).toBeNull();
       expect(contentInDev).toBeNull();
@@ -325,10 +325,10 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
         createdAt: Date.now(),
       };
 
-      const id = await storage.storeCheckpoint(largeCheckpoint);
+      const id = await storage.storeAgentCheckpoint(largeCheckpoint);
       expect(id).toMatch(/-/);
 
-      const retrieved = await storage.retrieveCheckpoint(id);
+      const retrieved = await storage.retrieveAgentCheckpoint(id);
       expect(retrieved).not.toBeNull();
       expect(retrieved!.state.messages).toHaveLength(100);
       expect(retrieved!.state.context.largeData).toHaveLength(1000);
@@ -350,10 +350,10 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       };
 
       // Should handle quota exceeded gracefully
-      const id = await storage.storeCheckpoint(checkpoint);
+      const id = await storage.storeAgentCheckpoint(checkpoint);
       
       // Verify checkpoint wasn't stored due to quota error
-      const checkpoints = await storage.listCheckpoints();
+      const checkpoints = await storage.listAgentCheckpoints();
       expect(checkpoints).toHaveLength(0);
     });
 
@@ -361,7 +361,7 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       // Simulate corrupted data in localStorage
       mockStorageData['tokenRingAgentState_v1_checkpoints'] = 'corrupted-json-data';
 
-      const checkpoints = await storage.listCheckpoints();
+      const checkpoints = await storage.listAgentCheckpoints();
       expect(checkpoints).toEqual([]);
 
       const checkpoint: NamedAgentCheckpoint = {
@@ -372,10 +372,10 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
         createdAt: Date.now(),
       };
 
-      const id = await storage.storeCheckpoint(checkpoint);
+      const id = await storage.storeAgentCheckpoint(checkpoint);
       expect(id).toMatch(/-/);
 
-      const retrieved = await storage.retrieveCheckpoint(id);
+      const retrieved = await storage.retrieveAgentCheckpoint(id);
       expect(retrieved).not.toBeNull();
       expect(retrieved!.name).toBe('recovery-test-checkpoint');
     });
@@ -390,10 +390,10 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       };
 
       // Store checkpoint
-      const id = await storage.storeCheckpoint(checkpoint);
+      const id = await storage.storeAgentCheckpoint(checkpoint);
       
       // Retrieve and verify
-      const retrieved = await storage.retrieveCheckpoint(id);
+      const retrieved = await storage.retrieveAgentCheckpoint(id);
       expect(retrieved).not.toBeNull();
       
       // Update data and verify consistency
@@ -403,7 +403,7 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       };
 
       // Store updated version
-      const updateId = await storage.storeCheckpoint({
+      const updateId = await storage.storeAgentCheckpoint({
         agentId: updatedCheckpoint.agentId,
         name: updatedCheckpoint.name,
         config: updatedCheckpoint.config,
@@ -412,8 +412,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       });
 
       // Verify both versions exist
-      const original = await storage.retrieveCheckpoint(id);
-      const updated = await storage.retrieveCheckpoint(updateId);
+      const original = await storage.retrieveAgentCheckpoint(id);
+      const updated = await storage.retrieveAgentCheckpoint(updateId);
 
       expect(original).not.toBeNull();
       expect(updated).not.toBeNull();
@@ -441,12 +441,12 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
           createdAt: startTime + i,
         };
 
-        const id = await storage.storeCheckpoint(checkpoint);
+        const id = await storage.storeAgentCheckpoint(checkpoint);
         checkpointIds.push(id);
       }
 
       // Verify all checkpoints were created
-      const allCheckpoints = await storage.listCheckpoints();
+      const allCheckpoints = await storage.listAgentCheckpoints();
       expect(allCheckpoints).toHaveLength(50);
 
       // Verify they are ordered correctly (newest first)
@@ -455,7 +455,7 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
 
       // Verify we can retrieve random checkpoints
       const randomId = checkpointIds[25];
-      const randomCheckpoint = await storage.retrieveCheckpoint(randomId);
+      const randomCheckpoint = await storage.retrieveAgentCheckpoint(randomId);
       expect(randomCheckpoint).not.toBeNull();
       expect(randomCheckpoint!.name).toBe('rapid-checkpoint-25');
     });
@@ -484,14 +484,14 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       // Store all checkpoints
       const ids: string[] = [];
       for (const checkpoint of checkpointData) {
-        const id = await storage.storeCheckpoint(checkpoint);
+        const id = await storage.storeAgentCheckpoint(checkpoint);
         ids.push(id);
       }
 
       expect(ids).toHaveLength(30);
 
       // Verify batch retrieval
-      const allCheckpoints = await storage.listCheckpoints();
+      const allCheckpoints = await storage.listAgentCheckpoints();
       expect(allCheckpoints).toHaveLength(30);
 
       // Verify agent-specific filtering by manual inspection

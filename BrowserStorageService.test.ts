@@ -173,7 +173,7 @@ describe('BrowserAgentStateStorage', () => {
         createdAt: 1234567890,
       };
 
-      const id = await storage.storeCheckpoint(checkpoint);
+      const id = await storage.storeAgentCheckpoint(checkpoint);
       expect(id).toMatch(/-/);
       
       // Verify checkpoint was stored
@@ -206,8 +206,8 @@ describe('BrowserAgentStateStorage', () => {
         createdAt: 1234567891,
       };
 
-      const id1 = await storage.storeCheckpoint(checkpoint1);
-      const id2 = await storage.storeCheckpoint(checkpoint2);
+      const id1 = await storage.storeAgentCheckpoint(checkpoint1);
+      const id2 = await storage.storeAgentCheckpoint(checkpoint2);
 
       expect(id1).not.toBe(id2);
       const storedCheckpoints = (storage as any)._getAllCheckpoints();
@@ -223,7 +223,7 @@ describe('BrowserAgentStateStorage', () => {
         // createdAt not provided
       };
 
-      const id = await storage.storeCheckpoint(checkpoint);
+      const id = await storage.storeAgentCheckpoint(checkpoint);
       const storedCheckpoints = (storage as any)._getAllCheckpoints();
       
       expect(storedCheckpoints[0].createdAt).toBeGreaterThan(0);
@@ -237,7 +237,7 @@ describe('BrowserAgentStateStorage', () => {
     });
 
     it('should return null for non-existent checkpoint', async () => {
-      const result = await storage.retrieveCheckpoint('non-existent-id');
+      const result = await storage.retrieveAgentCheckpoint('non-existent-id');
       expect(result).toBeNull();
     });
 
@@ -250,8 +250,8 @@ describe('BrowserAgentStateStorage', () => {
         createdAt: 1234567890,
       };
 
-      const id = await storage.storeCheckpoint(checkpoint);
-      const result = await storage.retrieveCheckpoint(id);
+      const id = await storage.storeAgentCheckpoint(checkpoint);
+      const result = await storage.retrieveAgentCheckpoint(id);
 
       expect(result).not.toBeNull();
       expect(result!.id).toBe(id);
@@ -269,7 +269,7 @@ describe('BrowserAgentStateStorage', () => {
     });
 
     it('should return empty array when no checkpoints stored', async () => {
-      const result = await storage.listCheckpoints();
+      const result = await storage.listAgentCheckpoints();
       expect(result).toEqual([]);
     });
 
@@ -298,11 +298,11 @@ describe('BrowserAgentStateStorage', () => {
         createdAt: 1234567891,
       };
 
-      await storage.storeCheckpoint(checkpoint1);
-      await storage.storeCheckpoint(checkpoint2);
-      await storage.storeCheckpoint(checkpoint3);
+      await storage.storeAgentCheckpoint(checkpoint1);
+      await storage.storeAgentCheckpoint(checkpoint2);
+      await storage.storeAgentCheckpoint(checkpoint3);
 
-      const result = await storage.listCheckpoints();
+      const result = await storage.listAgentCheckpoints();
       
       expect(result).toHaveLength(3);
       // Should be ordered by createdAt descending (newest first)
@@ -340,7 +340,7 @@ describe('BrowserAgentStateStorage', () => {
         createdAt: 1234567890,
       };
 
-      const id = await storage.storeCheckpoint(checkpoint);
+      const id = await storage.storeAgentCheckpoint(checkpoint);
       expect((storage as any)._getAllCheckpoints()).toHaveLength(1);
 
       const result = await storage.deleteCheckpoint(id);
@@ -365,8 +365,8 @@ describe('BrowserAgentStateStorage', () => {
         createdAt: 1234567891,
       };
 
-      const id1 = await storage.storeCheckpoint(checkpoint1);
-      const id2 = await storage.storeCheckpoint(checkpoint2);
+      const id1 = await storage.storeAgentCheckpoint(checkpoint1);
+      const id2 = await storage.storeAgentCheckpoint(checkpoint2);
 
       await storage.deleteCheckpoint(id1);
       
@@ -398,8 +398,8 @@ describe('BrowserAgentStateStorage', () => {
         createdAt: 1234567891,
       };
 
-      await storage.storeCheckpoint(checkpoint1);
-      await storage.storeCheckpoint(checkpoint2);
+      await storage.storeAgentCheckpoint(checkpoint1);
+      await storage.storeAgentCheckpoint(checkpoint2);
       expect((storage as any)._getAllCheckpoints()).toHaveLength(2);
 
       await storage.clearAllCheckpoints();
@@ -437,17 +437,17 @@ describe('BrowserAgentStateStorage', () => {
         createdAt: 1234567890,
       };
 
-      const id = await storage.storeCheckpoint(checkpoint);
+      const id = await storage.storeAgentCheckpoint(checkpoint);
 
       // Retrieve checkpoint
-      const retrieved = await storage.retrieveCheckpoint(id);
+      const retrieved = await storage.retrieveAgentCheckpoint(id);
       expect(retrieved).not.toBeNull();
       expect(retrieved!.name).toBe('integration-test');
       expect(retrieved!.config).toEqual({ model: 'gpt-4', temperature: 0.8 });
       expect(retrieved!.state).toEqual({ messages: ['Hello'], context: { user: 'test' } });
 
       // List checkpoints
-      const listed = await storage.listCheckpoints();
+      const listed = await storage.listAgentCheckpoints();
       expect(listed).toHaveLength(1);
       expect(listed[0]).toMatchObject({
         id,
@@ -462,7 +462,7 @@ describe('BrowserAgentStateStorage', () => {
       expect(deleted).toBe(true);
 
       // Verify deletion
-      const retrievedAfterDelete = await storage.retrieveCheckpoint(id);
+      const retrievedAfterDelete = await storage.retrieveAgentCheckpoint(id);
       expect(retrievedAfterDelete).toBeNull();
     });
 
@@ -491,20 +491,20 @@ describe('BrowserAgentStateStorage', () => {
       };
 
       // Store in storage1
-      const id1 = await storage1.storeCheckpoint(checkpoint1);
+      const id1 = await storage1.storeAgentCheckpoint(checkpoint1);
       
       // Store in storage2
-      const id2 = await storage2.storeCheckpoint(checkpoint2);
+      const id2 = await storage2.storeAgentCheckpoint(checkpoint2);
 
       // Verify isolation
-      expect(await storage1.listCheckpoints()).toHaveLength(1);
-      expect(await storage2.listCheckpoints()).toHaveLength(1);
+      expect(await storage1.listAgentCheckpoints()).toHaveLength(1);
+      expect(await storage2.listAgentCheckpoints()).toHaveLength(1);
       
-      expect(await storage1.retrieveCheckpoint(id1)).not.toBeNull();
-      expect(await storage1.retrieveCheckpoint(id2)).toBeNull();
+      expect(await storage1.retrieveAgentCheckpoint(id1)).not.toBeNull();
+      expect(await storage1.retrieveAgentCheckpoint(id2)).toBeNull();
       
-      expect(await storage2.retrieveCheckpoint(id2)).not.toBeNull();
-      expect(await storage2.retrieveCheckpoint(id1)).toBeNull();
+      expect(await storage2.retrieveAgentCheckpoint(id2)).not.toBeNull();
+      expect(await storage2.retrieveAgentCheckpoint(id1)).toBeNull();
     });
   });
 
@@ -527,7 +527,7 @@ describe('BrowserAgentStateStorage', () => {
       };
 
       // Should not throw error, but checkpoint won't be stored
-      const id = await storage.storeCheckpoint(checkpoint);
+      const id = await storage.storeAgentCheckpoint(checkpoint);
       
       // Verify checkpoint wasn't stored due to error
       const storedCheckpoints = (storage as any)._getAllCheckpoints();
