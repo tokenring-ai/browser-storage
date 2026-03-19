@@ -66,12 +66,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       // 1. Initial development state
       const initialCheckpoint: NamedAgentCheckpoint = {
         agentId: 'dev-agent-001',
+        agentType: 'developer',
         name: 'initial-development',
-        config: { 
-          model: 'gpt-4',
-          temperature: 0.7,
-          maxTokens: 2048,
-        },
         state: {
           messages: [],
           context: {
@@ -88,12 +84,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       // 2. Feature implementation checkpoint
       const featureCheckpoint: NamedAgentCheckpoint = {
         agentId: 'dev-agent-001',
+        agentType: 'developer',
         name: 'feature-implementation',
-        config: { 
-          model: 'gpt-4',
-          temperature: 0.8,
-          maxTokens: 4096,
-        },
         state: {
           messages: [
             { role: 'user', content: 'Implement todo feature' },
@@ -113,12 +105,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       // 3. Testing phase checkpoint
       const testingCheckpoint: NamedAgentCheckpoint = {
         agentId: 'dev-agent-001',
+        agentType: 'developer',
         name: 'testing-phase',
-        config: { 
-          model: 'gpt-4',
-          temperature: 0.3,
-          maxTokens: 1024,
-        },
         state: {
           messages: [
             { role: 'user', content: 'Run tests' },
@@ -149,7 +137,7 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       const retrievedTesting = await storage.retrieveAgentCheckpoint(testingId);
       expect(retrievedTesting).not.toBeNull();
       expect(retrievedTesting!.name).toBe('testing-phase');
-      expect(retrievedTesting!.config.temperature).toBe(0.3);
+      expect(retrievedTesting!.agentType).toBe('developer');
       expect(retrievedTesting!.state.context.phase).toBe('testing');
 
       // Simulate removing outdated checkpoints
@@ -165,12 +153,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       
       const planningCheckpoint: NamedAgentCheckpoint = {
         agentId: 'content-agent-001',
+        agentType: 'content-creator',
         name: 'content-planning',
-        config: { 
-          model: 'gpt-4',
-          temperature: 0.9,
-          maxTokens: 2048,
-        },
         state: {
           messages: [],
           context: {
@@ -184,12 +168,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
 
       const draftingCheckpoint: NamedAgentCheckpoint = {
         agentId: 'content-agent-001',
+        agentType: 'content-creator',
         name: 'drafting-article-1',
-        config: { 
-          model: 'gpt-4',
-          temperature: 0.8,
-          maxTokens: 4096,
-        },
         state: {
           messages: [
             { role: 'user', content: 'Write introduction' },
@@ -207,12 +187,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
 
       const finalizingCheckpoint: NamedAgentCheckpoint = {
         agentId: 'content-agent-001',
+        agentType: 'content-creator',
         name: 'finalizing-article',
-        config: { 
-          model: 'gpt-4',
-          temperature: 0.6,
-          maxTokens: 2048,
-        },
         state: {
           messages: [
             { role: 'user', content: 'Review and finalize' },
@@ -256,16 +232,16 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
 
       const devCheckpoint: NamedAgentCheckpoint = {
         agentId: 'dev-001',
+        agentType: 'developer',
         name: 'dev-checkpoint',
-        config: { model: 'gpt-4' },
         state: { messages: [], context: { project: 'api' } },
         createdAt: Date.now() - 1800000,
       };
 
       const contentCheckpoint: NamedAgentCheckpoint = {
         agentId: 'content-001',
+        agentType: 'content-creator',
         name: 'content-checkpoint',
-        config: { model: 'gpt-4' },
         state: { messages: [], context: { project: 'blog' } },
         createdAt: Date.now() - 900000,
       };
@@ -294,12 +270,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       // Simulate storing large checkpoint data
       const largeCheckpoint: NamedAgentCheckpoint = {
         agentId: 'large-data-agent',
+        agentType: 'data-processor',
         name: 'large-data-checkpoint',
-        config: { 
-          model: 'gpt-4',
-          temperature: 0.7,
-          maxTokens: 8192,
-        },
         state: {
           messages: Array(100).fill(0).map((_, i) => ({
             role: i % 2 === 0 ? 'user' : 'assistant',
@@ -343,8 +315,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
 
       const checkpoint: NamedAgentCheckpoint = {
         agentId: 'quota-test-agent',
+        agentType: 'test-agent',
         name: 'quota-test-checkpoint',
-        config: { model: 'gpt-4' },
         state: { messages: [] },
         createdAt: Date.now(),
       };
@@ -359,15 +331,15 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
 
     it('should handle data corruption recovery', async () => {
       // Simulate corrupted data in localStorage
-      mockStorageData['tokenRingAgentState_v1_checkpoints'] = 'corrupted-json-data';
+      mockStorageData['tokenring:checkpoints'] = 'corrupted-json-data';
 
       const checkpoints = await storage.listAgentCheckpoints();
       expect(checkpoints).toEqual([]);
 
       const checkpoint: NamedAgentCheckpoint = {
         agentId: 'recovery-test-agent',
+        agentType: 'test-agent',
         name: 'recovery-test-checkpoint',
-        config: { model: 'gpt-4' },
         state: { messages: [] },
         createdAt: Date.now(),
       };
@@ -383,8 +355,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
     it('should maintain data consistency across operations', async () => {
       const checkpoint: NamedAgentCheckpoint = {
         agentId: 'consistency-test-agent',
+        agentType: 'test-agent',
         name: 'consistency-test-checkpoint',
-        config: { model: 'gpt-4', temperature: 0.8 },
         state: { messages: ['msg1', 'msg2'], context: { key: 'value' } },
         createdAt: 1234567890,
       };
@@ -405,8 +377,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       // Store updated version
       const updateId = await storage.storeAgentCheckpoint({
         agentId: updatedCheckpoint.agentId,
+        agentType: updatedCheckpoint.agentType,
         name: updatedCheckpoint.name,
-        config: updatedCheckpoint.config,
         state: updatedCheckpoint.state,
         createdAt: updatedCheckpoint.createdAt,
       });
@@ -435,8 +407,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       for (let i = 0; i < 50; i++) {
         const checkpoint: NamedAgentCheckpoint = {
           agentId: 'perf-test-agent',
+          agentType: 'test-agent',
           name: `rapid-checkpoint-${i}`,
-          config: { model: 'gpt-4' },
           state: { messages: [`message-${i}`], iteration: i },
           createdAt: startTime + i,
         };
@@ -473,8 +445,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
         for (let i = 0; i < 10; i++) {
           checkpointData.push({
             agentId,
+            agentType: 'test-agent',
             name: `checkpoint-${i}`,
-            config: { model: 'gpt-4', version: i },
             state: { messages: [], iteration: i },
             createdAt: Date.now() + i,
           });

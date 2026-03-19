@@ -57,7 +57,7 @@ describe('BrowserAgentStateStorage', () => {
   describe('constructor', () => {
     it('should initialize with default prefix', () => {
       storage = new BrowserStorageService({});
-      expect(storage.storageKeyPrefix).toBe('tokenRingAgentState_v1_');
+      expect(storage.options.storageKeyPrefix).toBe('tokenring:');
       expect(storage.name).toBe('BrowserAgentStateStorage');
     });
 
@@ -65,7 +65,7 @@ describe('BrowserAgentStateStorage', () => {
       storage = new BrowserStorageService({
         storageKeyPrefix: 'custom_prefix_',
       });
-      expect(storage.storageKeyPrefix).toBe('custom_prefix_');
+      expect(storage.options.storageKeyPrefix).toBe('custom_prefix_');
       expect(storage.name).toBe('BrowserAgentStateStorage');
     });
   });
@@ -77,7 +77,7 @@ describe('BrowserAgentStateStorage', () => {
 
     it('should return correct storage key with default prefix', () => {
       const key = (storage as any)._getStorageKey();
-      expect(key).toBe('tokenRingAgentState_v1_checkpoints');
+      expect(key).toBe('tokenring:checkpoints');
     });
 
     it('should return correct storage key with custom prefix', () => {
@@ -113,8 +113,8 @@ describe('BrowserAgentStateStorage', () => {
         {
           id: 'agent1_1234567890',
           agentId: 'agent1',
+          agentType: 'test-agent',
           name: 'checkpoint1',
-          config: { model: 'gpt-4' },
           state: { messages: [] },
           createdAt: 1234567890,
         },
@@ -137,17 +137,22 @@ describe('BrowserAgentStateStorage', () => {
         {
           id: 'agent1_1234567890',
           agentId: 'agent1',
+          agentType: 'test-agent',
           name: 'checkpoint1',
-          config: { model: 'gpt-4' },
           state: { messages: [] },
           createdAt: 1234567890,
         },
       ];
       (storage as any)._saveAllCheckpoints(checkpoints);
+      // Verify the key is correct and data was stored
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'tokenRingAgentState_v1_checkpoints',
-        JSON.stringify(checkpoints)
+        'tokenring:checkpoints',
+        expect.any(String)
       );
+      // Verify the stored data can be parsed
+      const storedValue = vi.mocked(localStorageMock.setItem).mock.calls[0][1];
+      const parsed = JSON.parse(storedValue);
+      expect(parsed).toEqual(checkpoints);
     });
 
     it('should handle storage errors gracefully', () => {
@@ -167,13 +172,14 @@ describe('BrowserAgentStateStorage', () => {
     it('should store checkpoint and return generated ID', async () => {
       const checkpoint: NamedAgentCheckpoint = {
         agentId: 'agent1',
+        agentType: 'test-agent',
         name: 'test-checkpoint',
-        config: { model: 'gpt-4', temperature: 0.7 },
         state: { messages: [], context: {} },
         createdAt: 1234567890,
       };
 
       const id = await storage.storeAgentCheckpoint(checkpoint);
+      // UUID format contains dashes
       expect(id).toMatch(/-/);
       
       // Verify checkpoint was stored
@@ -182,8 +188,8 @@ describe('BrowserAgentStateStorage', () => {
       expect(storedCheckpoints[0]).toMatchObject({
         id,
         agentId: 'agent1',
+        agentType: 'test-agent',
         name: 'test-checkpoint',
-        config: checkpoint.config,
         state: checkpoint.state,
         createdAt: 1234567890,
       });
@@ -192,16 +198,16 @@ describe('BrowserAgentStateStorage', () => {
     it('should handle multiple checkpoints for same agent', async () => {
       const checkpoint1: NamedAgentCheckpoint = {
         agentId: 'agent1',
+        agentType: 'test-agent',
         name: 'checkpoint1',
-        config: { model: 'gpt-4' },
         state: { messages: [] },
         createdAt: 1234567890,
       };
 
       const checkpoint2: NamedAgentCheckpoint = {
         agentId: 'agent1',
+        agentType: 'test-agent',
         name: 'checkpoint2',
-        config: { model: 'gpt-3.5' },
         state: { messages: ['msg1'] },
         createdAt: 1234567891,
       };
@@ -217,8 +223,8 @@ describe('BrowserAgentStateStorage', () => {
     it('should use current time when createdAt not provided', async () => {
       const checkpoint: NamedAgentCheckpoint = {
         agentId: 'agent1',
+        agentType: 'test-agent',
         name: 'test-checkpoint',
-        config: { model: 'gpt-4' },
         state: { messages: [] },
         // createdAt not provided
       };
@@ -244,8 +250,8 @@ describe('BrowserAgentStateStorage', () => {
     it('should retrieve stored checkpoint', async () => {
       const checkpoint: NamedAgentCheckpoint = {
         agentId: 'agent1',
+        agentType: 'test-agent',
         name: 'test-checkpoint',
-        config: { model: 'gpt-4' },
         state: { messages: [] },
         createdAt: 1234567890,
       };
@@ -256,8 +262,8 @@ describe('BrowserAgentStateStorage', () => {
       expect(result).not.toBeNull();
       expect(result!.id).toBe(id);
       expect(result!.agentId).toBe('agent1');
+      expect(result!.agentType).toBe('test-agent');
       expect(result!.name).toBe('test-checkpoint');
-      expect(result!.config).toEqual({ model: 'gpt-4' });
       expect(result!.state).toEqual({ messages: [] });
       expect(result!.createdAt).toBe(1234567890);
     });
@@ -276,24 +282,24 @@ describe('BrowserAgentStateStorage', () => {
     it('should list all checkpoints ordered by creation time (newest first)', async () => {
       const checkpoint1: NamedAgentCheckpoint = {
         agentId: 'agent1',
+        agentType: 'test-agent',
         name: 'checkpoint1',
-        config: { model: 'gpt-4' },
         state: { messages: [] },
         createdAt: 1234567890,
       };
 
       const checkpoint2: NamedAgentCheckpoint = {
         agentId: 'agent2',
+        agentType: 'test-agent',
         name: 'checkpoint2',
-        config: { model: 'gpt-3.5' },
         state: { messages: [] },
         createdAt: 1234567892,
       };
 
       const checkpoint3: NamedAgentCheckpoint = {
         agentId: 'agent3',
+        agentType: 'test-agent',
         name: 'checkpoint3',
-        config: { model: 'gpt-4' },
         state: { messages: [] },
         createdAt: 1234567891,
       };
@@ -310,12 +316,12 @@ describe('BrowserAgentStateStorage', () => {
       expect(result[1].createdAt).toBe(1234567891);
       expect(result[2].createdAt).toBe(1234567890);
       
-      // Verify list items have correct structure
+      // Verify list items have correct structure (no config in list items)
       expect(result[0]).toMatchObject({
         id: expect.stringMatching(/-/),
         name: 'checkpoint2',
         agentId: 'agent2',
-        config: { model: 'gpt-3.5' },
+        agentType: 'test-agent',
         createdAt: 1234567892,
       });
     });
@@ -334,8 +340,8 @@ describe('BrowserAgentStateStorage', () => {
     it('should delete existing checkpoint and return true', async () => {
       const checkpoint: NamedAgentCheckpoint = {
         agentId: 'agent1',
+        agentType: 'test-agent',
         name: 'test-checkpoint',
-        config: { model: 'gpt-4' },
         state: { messages: [] },
         createdAt: 1234567890,
       };
@@ -351,16 +357,16 @@ describe('BrowserAgentStateStorage', () => {
     it('should not affect other checkpoints when deleting one', async () => {
       const checkpoint1: NamedAgentCheckpoint = {
         agentId: 'agent1',
+        agentType: 'test-agent',
         name: 'checkpoint1',
-        config: { model: 'gpt-4' },
         state: { messages: [] },
         createdAt: 1234567890,
       };
 
       const checkpoint2: NamedAgentCheckpoint = {
         agentId: 'agent2',
+        agentType: 'test-agent',
         name: 'checkpoint2',
-        config: { model: 'gpt-3.5' },
         state: { messages: [] },
         createdAt: 1234567891,
       };
@@ -384,16 +390,16 @@ describe('BrowserAgentStateStorage', () => {
     it('should clear all checkpoints', async () => {
       const checkpoint1: NamedAgentCheckpoint = {
         agentId: 'agent1',
+        agentType: 'test-agent',
         name: 'checkpoint1',
-        config: { model: 'gpt-4' },
         state: { messages: [] },
         createdAt: 1234567890,
       };
 
       const checkpoint2: NamedAgentCheckpoint = {
         agentId: 'agent2',
+        agentType: 'test-agent',
         name: 'checkpoint2',
-        config: { model: 'gpt-3.5' },
         state: { messages: [] },
         createdAt: 1234567891,
       };
@@ -416,7 +422,7 @@ describe('BrowserAgentStateStorage', () => {
       expect(() => storage.close()).not.toThrow();
       // Verify no side effects after close
       expect(storage.name).toBe('BrowserAgentStateStorage');
-      expect(storage.storageKeyPrefix).toBe('tokenRingAgentState_v1_');
+      expect(storage.options.storageKeyPrefix).toBe('tokenring:');
     });
   });
 
@@ -431,8 +437,8 @@ describe('BrowserAgentStateStorage', () => {
       // Store checkpoint
       const checkpoint: NamedAgentCheckpoint = {
         agentId: 'test-agent',
+        agentType: 'test-agent',
         name: 'integration-test',
-        config: { model: 'gpt-4', temperature: 0.8 },
         state: { messages: ['Hello'], context: { user: 'test' } },
         createdAt: 1234567890,
       };
@@ -443,7 +449,6 @@ describe('BrowserAgentStateStorage', () => {
       const retrieved = await storage.retrieveAgentCheckpoint(id);
       expect(retrieved).not.toBeNull();
       expect(retrieved!.name).toBe('integration-test');
-      expect(retrieved!.config).toEqual({ model: 'gpt-4', temperature: 0.8 });
       expect(retrieved!.state).toEqual({ messages: ['Hello'], context: { user: 'test' } });
 
       // List checkpoints
@@ -453,7 +458,7 @@ describe('BrowserAgentStateStorage', () => {
         id,
         name: 'integration-test',
         agentId: 'test-agent',
-        config: checkpoint.config,
+        agentType: 'test-agent',
         createdAt: 1234567890,
       });
 
@@ -476,16 +481,16 @@ describe('BrowserAgentStateStorage', () => {
 
       const checkpoint1: NamedAgentCheckpoint = {
         agentId: 'agent1',
+        agentType: 'test-agent',
         name: 'checkpoint1',
-        config: { model: 'gpt-4' },
         state: { messages: [] },
         createdAt: 1234567890,
       };
 
       const checkpoint2: NamedAgentCheckpoint = {
         agentId: 'agent1',
+        agentType: 'test-agent',
         name: 'checkpoint2',
-        config: { model: 'gpt-3.5' },
         state: { messages: [] },
         createdAt: 1234567891,
       };
@@ -520,8 +525,8 @@ describe('BrowserAgentStateStorage', () => {
 
       const checkpoint: NamedAgentCheckpoint = {
         agentId: 'agent1',
+        agentType: 'test-agent',
         name: 'test-checkpoint',
-        config: { model: 'gpt-4' },
         state: { messages: [] },
         createdAt: 1234567890,
       };
