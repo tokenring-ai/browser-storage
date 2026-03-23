@@ -35,7 +35,7 @@ export default class BrowserStorageService implements TokenRingService, AgentChe
   displayName: string;
 
 	/**
-   * Creates a new BrowserAgentStateStorage instance.
+   * Creates a new BrowserStorageService instance.
    * @param options
    */
 	constructor(readonly options: ParsedBrowserStorageConfig) {

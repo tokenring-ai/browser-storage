@@ -1,6 +1,7 @@
 import type {NamedAgentCheckpoint, StoredAgentCheckpoint,} from '@tokenring-ai/checkpoint/AgentCheckpointStorage';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import BrowserStorageService from './BrowserStorageService';
+import {BrowserStorageServiceConfigSchema} from './schema.js';
 
 // Mock localStorage for testing
 interface LocalStorageMock {
@@ -24,6 +25,9 @@ const localStorageMock: LocalStorageMock = {
 
 // Store the original localStorage
 const originalLocalStorage = globalThis.localStorage;
+
+// Helper to parse config through schema
+const parseConfig = (config: unknown) => BrowserStorageServiceConfigSchema.parse(config);
 
 describe('BrowserAgentStateStorage', () => {
   let storage: BrowserStorageService;
@@ -56,15 +60,17 @@ describe('BrowserAgentStateStorage', () => {
 
   describe('constructor', () => {
     it('should initialize with default prefix', () => {
-      storage = new BrowserStorageService({});
+      const config = parseConfig({});
+      storage = new BrowserStorageService(config);
       expect(storage.options.storageKeyPrefix).toBe('tokenring:');
       expect(storage.name).toBe('BrowserAgentStateStorage');
     });
 
     it('should initialize with custom prefix', () => {
-      storage = new BrowserStorageService({
+      const config = parseConfig({
         storageKeyPrefix: 'custom_prefix_',
       });
+      storage = new BrowserStorageService(config);
       expect(storage.options.storageKeyPrefix).toBe('custom_prefix_');
       expect(storage.name).toBe('BrowserAgentStateStorage');
     });
@@ -72,7 +78,8 @@ describe('BrowserAgentStateStorage', () => {
 
   describe('_getStorageKey', () => {
     beforeEach(() => {
-      storage = new BrowserStorageService({});
+      const config = parseConfig({});
+      storage = new BrowserStorageService(config);
     });
 
     it('should return correct storage key with default prefix', () => {
@@ -81,9 +88,10 @@ describe('BrowserAgentStateStorage', () => {
     });
 
     it('should return correct storage key with custom prefix', () => {
-      storage = new BrowserStorageService({
+      const config = parseConfig({
         storageKeyPrefix: 'custom_prefix_',
       });
+      storage = new BrowserStorageService(config);
       const key = (storage as any)._getStorageKey();
       expect(key).toBe('custom_prefix_checkpoints');
     });
@@ -91,7 +99,8 @@ describe('BrowserAgentStateStorage', () => {
 
   describe('_getAllCheckpoints', () => {
     beforeEach(() => {
-      storage = new BrowserStorageService({});
+      const config = parseConfig({});
+      storage = new BrowserStorageService(config);
     });
 
     it('should return empty array when no data stored', () => {
@@ -129,7 +138,8 @@ describe('BrowserAgentStateStorage', () => {
 
   describe('_saveAllCheckpoints', () => {
     beforeEach(() => {
-      storage = new BrowserStorageService({});
+      const config = parseConfig({});
+      storage = new BrowserStorageService(config);
     });
 
     it('should save checkpoints to localStorage', () => {
@@ -166,7 +176,8 @@ describe('BrowserAgentStateStorage', () => {
 
   describe('storeCheckpoint', () => {
     beforeEach(() => {
-      storage = new BrowserStorageService({});
+      const config = parseConfig({});
+      storage = new BrowserStorageService(config);
     });
 
     it('should store checkpoint and return generated ID', async () => {
@@ -239,7 +250,8 @@ describe('BrowserAgentStateStorage', () => {
 
   describe('retrieveCheckpoint', () => {
     beforeEach(() => {
-      storage = new BrowserStorageService({});
+      const config = parseConfig({});
+      storage = new BrowserStorageService(config);
     });
 
     it('should return null for non-existent checkpoint', async () => {
@@ -271,7 +283,8 @@ describe('BrowserAgentStateStorage', () => {
 
   describe('listCheckpoints', () => {
     beforeEach(() => {
-      storage = new BrowserStorageService({});
+      const config = parseConfig({});
+      storage = new BrowserStorageService(config);
     });
 
     it('should return empty array when no checkpoints stored', async () => {
@@ -329,7 +342,8 @@ describe('BrowserAgentStateStorage', () => {
 
   describe('deleteCheckpoint', () => {
     beforeEach(() => {
-      storage = new BrowserStorageService({});
+      const config = parseConfig({});
+      storage = new BrowserStorageService(config);
     });
 
     it('should return false for non-existent checkpoint', async () => {
@@ -384,7 +398,8 @@ describe('BrowserAgentStateStorage', () => {
 
   describe('clearAllCheckpoints', () => {
     beforeEach(() => {
-      storage = new BrowserStorageService({});
+      const config = parseConfig({});
+      storage = new BrowserStorageService(config);
     });
 
     it('should clear all checkpoints', async () => {
@@ -415,7 +430,8 @@ describe('BrowserAgentStateStorage', () => {
 
   describe('close', () => {
     beforeEach(() => {
-      storage = new BrowserStorageService({});
+      const config = parseConfig({});
+      storage = new BrowserStorageService(config);
     });
 
     it('should be a no-op method', () => {
@@ -428,9 +444,8 @@ describe('BrowserAgentStateStorage', () => {
 
   describe('Integration scenarios', () => {
     beforeEach(() => {
-      storage = new BrowserStorageService({
-        storageKeyPrefix: 'test_app_',
-      });
+      const config = parseConfig({ storageKeyPrefix: 'test_app_' });
+      storage = new BrowserStorageService(config);
     });
 
     it('should handle complete checkpoint lifecycle', async () => {
@@ -472,12 +487,10 @@ describe('BrowserAgentStateStorage', () => {
     });
 
     it('should isolate data with different prefixes', async () => {
-      const storage1 = new BrowserStorageService({
-        storageKeyPrefix: 'app1_',
-      });
-      const storage2 = new BrowserStorageService({
-        storageKeyPrefix: 'app2_',
-      });
+      const config1 = parseConfig({ storageKeyPrefix: 'app1_' });
+      const config2 = parseConfig({ storageKeyPrefix: 'app2_' });
+      const storage1 = new BrowserStorageService(config1);
+      const storage2 = new BrowserStorageService(config2);
 
       const checkpoint1: NamedAgentCheckpoint = {
         agentId: 'agent1',
@@ -515,7 +528,8 @@ describe('BrowserAgentStateStorage', () => {
 
   describe('Error handling', () => {
     beforeEach(() => {
-      storage = new BrowserStorageService({});
+      const config = parseConfig({});
+      storage = new BrowserStorageService(config);
     });
 
     it('should handle localStorage quota exceeded', async () => {
@@ -551,7 +565,8 @@ describe('BrowserAgentStateStorage', () => {
       globalThis.localStorage = undefined as any;
       
       expect(() => {
-        storage = new BrowserStorageService({});
+        const config = parseConfig({});
+        storage = new BrowserStorageService(config);
       }).not.toThrow();
     });
   });

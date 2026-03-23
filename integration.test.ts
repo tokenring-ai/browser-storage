@@ -1,6 +1,7 @@
 import type {NamedAgentCheckpoint, StoredAgentCheckpoint,} from '@tokenring-ai/checkpoint/AgentCheckpointStorage';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import BrowserStorageService from './BrowserStorageService';
+import {BrowserStorageServiceConfigSchema} from './schema.js';
 
 // Mock localStorage for integration tests
 interface LocalStorageMock {
@@ -24,6 +25,9 @@ const localStorageMock: LocalStorageMock = {
 
 // Store the original localStorage
 const originalLocalStorage = globalThis.localStorage;
+
+// Helper to parse config through schema
+const parseConfig = (config: unknown) => BrowserStorageServiceConfigSchema.parse(config);
 
 describe('BrowserAgentStateStorage Integration Tests', () => {
   let storage: BrowserStorageService;
@@ -57,7 +61,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
 
   describe('Real-world usage scenarios', () => {
     beforeEach(() => {
-      storage = new BrowserStorageService({});
+      const config = parseConfig({});
+      storage = new BrowserStorageService(config);
     });
 
     it('should handle agent development workflow', async () => {
@@ -222,13 +227,11 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
     });
 
     it('should handle multiple agents with different prefixes', async () => {
-      const devStorage = new BrowserStorageService({
-        storageKeyPrefix: 'dev_agents_',
-      });
+      const devConfig = parseConfig({ storageKeyPrefix: 'dev_agents_' });
+      const devStorage = new BrowserStorageService(devConfig);
 
-      const contentStorage = new BrowserStorageService({
-        storageKeyPrefix: 'content_agents_',
-      });
+      const contentConfig = parseConfig({ storageKeyPrefix: 'content_agents_' });
+      const contentStorage = new BrowserStorageService(contentConfig);
 
       const devCheckpoint: NamedAgentCheckpoint = {
         agentId: 'dev-001',
@@ -398,7 +401,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
 
   describe('Performance scenarios', () => {
     it('should handle rapid checkpoint creation', async () => {
-      storage = new BrowserStorageService({});
+      const config = parseConfig({});
+      storage = new BrowserStorageService(config);
 
       const startTime = Date.now();
       const checkpointIds: string[] = [];
@@ -433,9 +437,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
     });
 
     it('should handle batch operations efficiently', async () => {
-      storage = new BrowserStorageService({
-        storageKeyPrefix: 'batch_test_',
-      });
+      const config = parseConfig({ storageKeyPrefix: 'batch_test_' });
+      storage = new BrowserStorageService(config);
 
       // Create checkpoints for different agents
       const agentIds = ['agent-1', 'agent-2', 'agent-3'];
