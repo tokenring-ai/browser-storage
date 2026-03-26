@@ -1,7 +1,7 @@
 import {TokenRingPlugin} from "@tokenring-ai/app";;
 import AgentCheckpointService from "@tokenring-ai/checkpoint/AgentCheckpointService";
 import {z} from "zod";
-import BrowserStorageService from "./BrowserStorageService.js";
+import BrowserStorageService from "./BrowserStorageService.ts";
 import packageJSON from "./package.json" with {type: "json"};
 import {BrowserStorageServiceConfigSchema} from "./schema.ts";
 

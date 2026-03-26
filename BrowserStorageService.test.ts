@@ -1,7 +1,7 @@
 import type {NamedAgentCheckpoint, StoredAgentCheckpoint,} from '@tokenring-ai/checkpoint/AgentCheckpointStorage';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import BrowserStorageService from './BrowserStorageService';
-import {BrowserStorageServiceConfigSchema} from './schema.js';
+import {BrowserStorageServiceConfigSchema} from './schema.ts';
 
 // Mock localStorage for testing
 interface LocalStorageMock {
