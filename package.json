@@ -1,6 +1,6 @@
 {
   "name": "@tokenring-ai/browser-storage",
-  "description": "Provides browser-based storage for the TokenRing ecosystem.",
+  "description": "Provides browser-based agent state storage for the TokenRing ecosystem using localStorage for persistent checkpoint management.",
   "version": "0.2.0",
   "dependencies": {
     "@tokenring-ai/agent": "0.2.0",
@@ -13,8 +13,8 @@
   "main": "index.ts",
   "type": "module",
   "devDependencies": {
-    "vitest": "^4.1.0",
-    "typescript": "^5.9.3"
+    "vitest": "^4.1.1",
+    "typescript": "^6.0.2"
   },
   "scripts": {
     "test": "vitest run",

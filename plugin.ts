@@ -1,5 +1,4 @@
-import {TokenRingPlugin} from "@tokenring-ai/app";
-import {CheckpointConfigSchema} from "@tokenring-ai/checkpoint";
+import {TokenRingPlugin} from "@tokenring-ai/app";;
 import AgentCheckpointService from "@tokenring-ai/checkpoint/AgentCheckpointService";
 import {z} from "zod";
 import BrowserStorageService from "./BrowserStorageService.js";

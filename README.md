@@ -10,7 +10,7 @@ The Browser Agent Storage package implements a browser-based storage provider fo
 
 - **Browser-based Storage**: Uses localStorage for persistent agent state storage
 - **Checkpoint Management**: Full CRUD operations for agent state checkpoints
-- **TokenRing Integration**: Seamlessly integrates with the TokenRing checkpoint system via the `AgentCheckpointProvider` interface
+- **TokenRing Integration**: Seamlessly integrates with the TokenRing checkpoint system via the `AgentCheckpointStorage` interface
 - **Agent-specific Storage**: Supports multiple agents with configurable storage isolation via prefixes
 - **Cross-platform Compatibility**: Works across all modern browsers supporting localStorage
 - **Type-safe Implementation**: Full TypeScript support with Zod schema validation
@@ -27,25 +27,26 @@ bun install @tokenring-ai/browser-storage
 
 ```
 pkg/browser-storage/
-├── BrowserAgentStateStorage.ts      # Core storage implementation
-├── index.ts                         # Module exports
-├── plugin.ts                        # TokenRing plugin integration
-├── package.json                     # Package configuration
-├── vitest.config.ts                 # Test configuration
-├── BrowserAgentStateStorage.test.ts # Unit tests
-└── integration.test.ts              # Integration tests
+├── BrowserStorageService.ts     # Core storage implementation
+├── index.ts                     # Module exports
+├── plugin.ts                    # TokenRing plugin integration
+├── schema.ts                    # Configuration schema
+├── package.json                 # Package configuration
+├── vitest.config.ts             # Test configuration
+├── BrowserStorageService.test.ts # Unit tests
+└── integration.test.ts          # Integration tests
 ```
 
 ## Core Components
 
-### BrowserAgentStateStorage
+### BrowserStorageService
 
-The main storage class that implements the `AgentCheckpointProvider` interface for browser-based storage:
+The main storage class that implements the `AgentCheckpointStorage` interface for browser-based storage:
 
 ```typescript
-import { BrowserAgentStateStorage } from '@tokenring-ai/browser-storage';
+import { BrowserStorageService } from '@tokenring-ai/browser-storage';
 
-const storage = new BrowserAgentStateStorage({
+const storage = new BrowserStorageService({
   storageKeyPrefix: 'myApp_', // Optional custom prefix
 });
 ```
@@ -54,7 +55,7 @@ const storage = new BrowserAgentStateStorage({
 
 | Property | Type | Required | Default | Description |
 |----------|------|----------|---------|-------------|
-| storageKeyPrefix | string | No | `tokenRingAgentState_v1_` | Custom prefix for localStorage keys to achieve isolation between applications |
+| storageKeyPrefix | string | No | `tokenring:` | Custom prefix for localStorage keys to achieve isolation between applications |
 
 #### Storage Structure
 
@@ -66,8 +67,9 @@ The storage contains an array of checkpoints. Each checkpoint has the following 
 |----------|------|-------------|
 | id | string | Unique identifier (UUID v4) |
 | agentId | string | The agent identifier |
+| agentType | string | The type of agent (e.g., 'developer', 'content-creator') |
+| sessionId | string | Optional session identifier |
 | name | string | Checkpoint name |
-| config | object | Agent configuration at checkpoint time |
 | state | object | Agent state data |
 | createdAt | number | Timestamp of checkpoint creation |
 
@@ -82,18 +84,18 @@ The package exports the following types and interfaces:
 
 ```typescript
 // Main class
-import BrowserAgentStateStorage from '@tokenring-ai/browser-storage';
+import BrowserStorageService from '@tokenring-ai/browser-storage';
 
 // Zod schema for validation
-import { BrowserAgentStateStorageOptionsSchema } from '@tokenring-ai/browser-storage';
+import { BrowserStorageServiceConfigSchema } from '@tokenring-ai/browser-storage';
 
 // Checkpoint types from @tokenring-ai/checkpoint
 import type {
   NamedAgentCheckpoint,
   StoredAgentCheckpoint,
   AgentCheckpointListItem,
-  AgentCheckpointProvider,
-} from '@tokenring-ai/checkpoint/AgentCheckpointProvider';
+  AgentCheckpointStorage,
+} from '@tokenring-ai/checkpoint/AgentCheckpointStorage';
 ```
 
 ### Type Definitions
@@ -101,8 +103,13 @@ import type {
 #### NamedAgentCheckpoint
 
 ```typescript
-interface NamedAgentCheckpoint extends AgentCheckpointData {
+interface NamedAgentCheckpoint {
+  agentId: string;
+  agentType?: string;
+  sessionId?: string;
   name: string;
+  state: Record<string, any>;
+  createdAt?: number;
 }
 ```
 
@@ -117,7 +124,14 @@ interface StoredAgentCheckpoint extends NamedAgentCheckpoint {
 #### AgentCheckpointListItem
 
 ```typescript
-type AgentCheckpointListItem = Omit<StoredAgentCheckpoint, "state" | "config">;
+interface AgentCheckpointListItem {
+  id: string;
+  name: string;
+  agentId: string;
+  agentType?: string;
+  sessionId?: string;
+  createdAt: number;
+}
 ```
 
 ## Usage Examples
@@ -125,29 +139,29 @@ type AgentCheckpointListItem = Omit<StoredAgentCheckpoint, "state" | "config">;
 ### Basic Storage Operations
 
 ```typescript
-import { BrowserAgentStateStorage } from '@tokenring-ai/browser-storage';
+import BrowserStorageService from '@tokenring-ai/browser-storage';
 
 // Initialize storage with default prefix
-const storage = new BrowserAgentStateStorage({});
+const storage = new BrowserStorageService({});
 
 // Create a checkpoint
 const checkpoint = {
   agentId: 'agent-123',
+  agentType: 'developer',
   name: 'initial-state',
-  config: { model: 'gpt-4', temperature: 0.7 },
   state: { messages: [], context: {} },
   createdAt: Date.now(),
 };
 
-const checkpointId = await storage.storeCheckpoint(checkpoint);
+const checkpointId = await storage.storeAgentCheckpoint(checkpoint);
 console.log('Stored checkpoint:', checkpointId);
 
 // Retrieve a checkpoint
-const retrieved = await storage.retrieveCheckpoint(checkpointId);
+const retrieved = await storage.retrieveAgentCheckpoint(checkpointId);
 console.log('Retrieved checkpoint:', retrieved);
 
 // List all checkpoints (newest first)
-const allCheckpoints = await storage.listCheckpoints();
+const allCheckpoints = await storage.listAgentCheckpoints();
 console.log('All checkpoints:', allCheckpoints);
 
 // Delete a specific checkpoint
@@ -158,10 +172,10 @@ console.log('Deleted:', deleted);
 ### Custom Storage Prefix
 
 ```typescript
-import { BrowserAgentStateStorage } from '@tokenring-ai/browser-storage';
+import BrowserStorageService from '@tokenring-ai/browser-storage';
 
 // Use custom prefix for isolation between applications
-const storage = new BrowserAgentStateStorage({
+const storage = new BrowserStorageService({
   storageKeyPrefix: 'myapp_v2_',
 });
 
@@ -172,45 +186,45 @@ const storage = new BrowserAgentStateStorage({
 ### Multiple Agents with Isolation
 
 ```typescript
-import { BrowserAgentStateStorage } from '@tokenring-ai/browser-storage';
+import BrowserStorageService from '@tokenring-ai/browser-storage';
 
 // Development agents
-const devStorage = new BrowserAgentStateStorage({
+const devStorage = new BrowserStorageService({
   storageKeyPrefix: 'dev_agents_',
 });
 
 // Content creation agents
-const contentStorage = new BrowserAgentStateStorage({
+const contentStorage = new BrowserStorageService({
   storageKeyPrefix: 'content_agents_',
 });
 
 // Store checkpoints for different agents
 const devCheckpoint = {
   agentId: 'dev-001',
+  agentType: 'developer',
   name: 'dev-checkpoint',
-  config: { model: 'gpt-4' },
   state: { messages: [], context: { project: 'api' } },
   createdAt: Date.now(),
 };
 
 const contentCheckpoint = {
   agentId: 'content-001',
+  agentType: 'content-creator',
   name: 'content-checkpoint',
-  config: { model: 'gpt-4' },
   state: { messages: [], context: { project: 'blog' } },
   createdAt: Date.now(),
 };
 
-const devId = await devStorage.storeCheckpoint(devCheckpoint);
-const contentId = await contentStorage.storeCheckpoint(contentCheckpoint);
+const devId = await devStorage.storeAgentCheckpoint(devCheckpoint);
+const contentId = await contentStorage.storeAgentCheckpoint(contentCheckpoint);
 
 // Verify isolation - each storage only sees its own checkpoints
-const devCheckpoints = await devStorage.listCheckpoints(); // 1 checkpoint
-const contentCheckpoints = await contentStorage.listCheckpoints(); // 1 checkpoint
+const devCheckpoints = await devStorage.listAgentCheckpoints(); // 1 checkpoint
+const contentCheckpoints = await contentStorage.listAgentCheckpoints(); // 1 checkpoint
 
 // Cross-storage retrieval returns null
-const devInContent = await contentStorage.retrieveCheckpoint(devId); // null
-const contentInDev = await devStorage.retrieveCheckpoint(contentId); // null
+const devInContent = await contentStorage.retrieveAgentCheckpoint(devId); // null
+const contentInDev = await devStorage.retrieveAgentCheckpoint(contentId); // null
 ```
 
 ### Integration with TokenRing
@@ -220,41 +234,42 @@ The plugin automatically registers the browser storage provider when configured:
 ```typescript
 // In your TokenRing app configuration
 const app = new TokenRingApp({
-  checkpoint: {
-    provider: {
-      type: "browser",
-      storageKeyPrefix: "myapp_"
-    }
-  }
+  plugins: [
+    BrowserAgentStoragePlugin({
+      browserStorage: {
+        storageKeyPrefix: "myapp_"
+      }
+    })
+  ]
 });
 
-// The BrowserAgentStateStorage will be automatically registered
+// The BrowserStorageService will be automatically registered
 // with the AgentCheckpointService
 ```
 
 ### Real-world Development Workflow
 
 ```typescript
-import { BrowserAgentStateStorage } from '@tokenring-ai/browser-storage';
+import BrowserStorageService from '@tokenring-ai/browser-storage';
 
-const storage = new BrowserAgentStateStorage({});
+const storage = new BrowserStorageService({});
 
 // Simulate a typical development workflow
 const initialCheckpoint = {
   agentId: 'dev-agent-001',
+  agentType: 'developer',
   name: 'initial-development',
-  config: { model: 'gpt-4', temperature: 0.7 },
-  state: { 
-    messages: [], 
-    context: { project: 'todo-app', phase: 'initialization' } 
+  state: {
+    messages: [],
+    context: { project: 'todo-app', phase: 'initialization' }
   },
   createdAt: Date.now() - 3600000, // 1 hour ago
 };
 
 const featureCheckpoint = {
   agentId: 'dev-agent-001',
+  agentType: 'developer',
   name: 'feature-implementation',
-  config: { model: 'gpt-4', temperature: 0.8 },
   state: {
     messages: [{ role: 'user', content: 'Implement todo feature' }],
     context: { project: 'todo-app', phase: 'feature-development' }
@@ -264,8 +279,8 @@ const featureCheckpoint = {
 
 const testingCheckpoint = {
   agentId: 'dev-agent-001',
+  agentType: 'developer',
   name: 'testing-phase',
-  config: { model: 'gpt-4', temperature: 0.3 },
   state: {
     messages: [{ role: 'user', content: 'Run tests' }],
     context: { project: 'todo-app', phase: 'testing', testResults: 'passed' }
@@ -274,16 +289,16 @@ const testingCheckpoint = {
 };
 
 // Store checkpoints
-const initialId = await storage.storeCheckpoint(initialCheckpoint);
-const featureId = await storage.storeCheckpoint(featureCheckpoint);
-const testingId = await storage.storeCheckpoint(testingCheckpoint);
+const initialId = await storage.storeAgentCheckpoint(initialCheckpoint);
+const featureId = await storage.storeAgentCheckpoint(featureCheckpoint);
+const testingId = await storage.storeAgentCheckpoint(testingCheckpoint);
 
 // List checkpoints (newest first)
-const checkpoints = await storage.listCheckpoints();
+const checkpoints = await storage.listAgentCheckpoints();
 // Order: testing-phase, feature-implementation, initial-development
 
 // Retrieve specific checkpoint
-const current = await storage.retrieveCheckpoint(testingId);
+const current = await storage.retrieveAgentCheckpoint(testingId);
 
 // Remove outdated checkpoint
 await storage.deleteCheckpoint(initialId);
@@ -295,20 +310,20 @@ await storage.clearAllCheckpoints();
 ### Error Handling
 
 ```typescript
-import { BrowserAgentStateStorage } from '@tokenring-ai/browser-storage';
+import BrowserStorageService from '@tokenring-ai/browser-storage';
 
-const storage = new BrowserAgentStateStorage({});
+const storage = new BrowserStorageService({});
 
 try {
   const checkpoint = {
     agentId: 'agent-123',
+    agentType: 'developer',
     name: 'test-checkpoint',
-    config: { model: 'gpt-4' },
     state: { messages: [] },
     createdAt: Date.now(),
   };
 
-  const id = await storage.storeCheckpoint(checkpoint);
+  const id = await storage.storeAgentCheckpoint(checkpoint);
   console.log('Checkpoint stored:', id);
 } catch (error) {
   console.error('Failed to store checkpoint:', error);
@@ -317,7 +332,7 @@ try {
 }
 
 // Retrieving non-existent checkpoint returns null
-const nonExistent = await storage.retrieveCheckpoint('non-existent-id');
+const nonExistent = await storage.retrieveAgentCheckpoint('non-existent-id');
 console.log(nonExistent); // null
 ```
 
@@ -328,19 +343,17 @@ console.log(nonExistent); // null
 The package includes a TokenRing plugin that automatically registers the browser storage provider. The plugin configuration schema is:
 
 ```typescript
-import {z} from "zod";
-import {CheckpointConfigSchema} from "@tokenring-ai/checkpoint";
+import { z } from "zod";
+import { BrowserStorageServiceConfigSchema } from '@tokenring-ai/browser-storage';
 
 const packageConfigSchema = z.object({
-  checkpoint: CheckpointConfigSchema.optional(),
+  browserStorage: BrowserStorageServiceConfigSchema,
 });
 
-// CheckpointConfigSchema from @tokenring-ai/checkpoint:
-const checkpointConfigSchema = z.object({
-  provider: z.looseObject({
-    type: z.string()
-  })
-});
+// BrowserStorageServiceConfigSchema:
+const BrowserStorageServiceConfigSchema = z.object({
+  storageKeyPrefix: z.string().default('tokenring:'),
+}).default({ storageKeyPrefix: 'tokenring:' });
 ```
 
 ### Plugin Registration
@@ -353,11 +366,8 @@ import BrowserAgentStoragePlugin from '@tokenring-ai/browser-storage/plugin';
 const app = new TokenRingApp({
   plugins: [
     BrowserAgentStoragePlugin({
-      checkpoint: {
-        provider: {
-          type: "browser",
-          storageKeyPrefix: "myapp_"
-        }
+      browserStorage: {
+        storageKeyPrefix: "myapp_"
       }
     })
   ]
@@ -375,60 +385,63 @@ const app = new TokenRingApp({
 
 ### Automatic Registration
 
-When the plugin is installed with a browser provider configuration:
+When the plugin is installed with a browser storage configuration:
 
-1. The plugin waits for the `AgentCheckpointService` to be available
-2. Creates a `BrowserAgentStateStorage` instance with the configured options
-3. Registers the provider with the checkpoint service via `setCheckpointProvider()`
+1. The plugin creates a `BrowserStorageService` instance with the configured options
+2. Registers the service in the app's service registry
+3. Waits for the `AgentCheckpointService` to be available
+4. Sets the storage service as the checkpoint provider via `setCheckpointProvider()`
 
 ## API Reference
 
-### BrowserAgentStateStorage
+### BrowserStorageService
 
 #### Properties
 
 | Property | Type | Description |
 |----------|------|-------------|
 | name | string | Storage provider name (`"BrowserAgentStateStorage"`) |
-| storageKeyPrefix | string | Configured prefix for localStorage keys |
+| description | string | Service description |
+| displayName | string | Display name including the configured prefix |
+| options | ParsedBrowserStorageConfig | Configuration options |
 
 #### Methods
 
-##### storeCheckpoint
+##### storeAgentCheckpoint
 
 Stores a new checkpoint for an agent.
 
 ```typescript
-async storeCheckpoint(checkpoint: NamedAgentCheckpoint): Promise<string>
+async storeAgentCheckpoint(checkpoint: NamedAgentCheckpoint): Promise<string>
 ```
 
 **Parameters:**
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| checkpoint | NamedAgentCheckpoint | Checkpoint data including agentId, name, config, state, and createdAt |
+| checkpoint | NamedAgentCheckpoint | Checkpoint data including agentId, agentType, sessionId, name, state, and createdAt |
 
 **Returns:** `Promise<string>` - The UUID v4 ID of the stored checkpoint
 
 **Example:**
 
 ```typescript
-const id = await storage.storeCheckpoint({
+const id = await storage.storeAgentCheckpoint({
   agentId: 'agent-123',
+  agentType: 'developer',
   name: 'my-checkpoint',
-  config: { model: 'gpt-4' },
   state: { messages: [] },
   createdAt: Date.now(),
 });
 // Returns: "550e8400-e29b-41d4-a716-446655440000"
 ```
 
-##### retrieveCheckpoint
+##### retrieveAgentCheckpoint
 
 Retrieves a checkpoint by its ID.
 
 ```typescript
-async retrieveCheckpoint(checkpointId: string): Promise<StoredAgentCheckpoint | null>
+async retrieveAgentCheckpoint(checkpointId: string): Promise<StoredAgentCheckpoint | null>
 ```
 
 **Parameters:**
@@ -442,16 +455,16 @@ async retrieveCheckpoint(checkpointId: string): Promise<StoredAgentCheckpoint | 
 **Example:**
 
 ```typescript
-const checkpoint = await storage.retrieveCheckpoint('550e8400-e29b-41d4-a716-446655440000');
+const checkpoint = await storage.retrieveAgentCheckpoint('550e8400-e29b-41d4-a716-446655440000');
 // Returns: StoredAgentCheckpoint | null
 ```
 
-##### listCheckpoints
+##### listAgentCheckpoints
 
 Lists all stored checkpoints ordered by creation time (newest first).
 
 ```typescript
-async listCheckpoints(): Promise<AgentCheckpointListItem[]>
+async listAgentCheckpoints(): Promise<AgentCheckpointListItem[]>
 ```
 
 **Returns:** `Promise<AgentCheckpointListItem[]>` - Array of checkpoint list items sorted by createdAt descending
@@ -459,11 +472,11 @@ async listCheckpoints(): Promise<AgentCheckpointListItem[]>
 **Example:**
 
 ```typescript
-const checkpoints = await storage.listCheckpoints();
+const checkpoints = await storage.listAgentCheckpoints();
 // Returns: [
-//   { id, name, config, agentId, createdAt }, // newest
-//   { id, name, config, agentId, createdAt },
-//   { id, name, config, agentId, createdAt }  // oldest
+//   { id, name, config, agentId, agentType, sessionId, createdAt }, // newest
+//   { id, name, config, agentId, agentType, sessionId, createdAt },
+//   { id, name, config, agentId, agentType, sessionId, createdAt }  // oldest
 // ]
 ```
 
@@ -526,54 +539,47 @@ storage.close();
 
 ## Configuration
 
-### BrowserAgentStateStorageOptionsSchema
+### BrowserStorageServiceConfigSchema
 
 The package exports a Zod schema for validating storage options:
 
 ```typescript
-import { BrowserAgentStateStorageOptionsSchema } from '@tokenring-ai/browser-storage';
+import { BrowserStorageServiceConfigSchema } from '@tokenring-ai/browser-storage';
 
-// The schema validates storageKeyPrefix (optional, defaults to "tokenRingAgentState_v1_")
-const validatedOptions = BrowserAgentStateStorageOptionsSchema.parse({
+// The schema validates storageKeyPrefix (optional, defaults to "tokenring:")
+const validatedOptions = BrowserStorageServiceConfigSchema.parse({
   storageKeyPrefix: 'custom_prefix_'
 });
 ```
 
-### TokenRing Integration
-
-The package integrates with the TokenRing checkpoint system using the standard checkpoint configuration schema:
+### ParsedBrowserStorageConfig
 
 ```typescript
-import { CheckpointConfigSchema } from '@tokenring-ai/checkpoint';
-
-// Checkpoint provider configuration
-const checkpointConfig = CheckpointConfigSchema.parse({
-  provider: {
-    type: "browser",
-    storageKeyPrefix: "myapp_"
-  }
-});
+type ParsedBrowserStorageConfig = {
+  storageKeyPrefix: string;
+};
 ```
 
-### AgentCheckpointProvider Interface
+### AgentCheckpointStorage Interface
 
-The package implements the `AgentCheckpointProvider` interface from `@tokenring-ai/checkpoint`:
+The package implements the `AgentCheckpointStorage` interface from `@tokenring-ai/checkpoint`:
 
 ```typescript
 import type {
   NamedAgentCheckpoint,
   StoredAgentCheckpoint,
   AgentCheckpointListItem,
-  AgentCheckpointProvider,
-} from '@tokenring-ai/checkpoint/AgentCheckpointProvider';
+  AgentCheckpointStorage,
+} from '@tokenring-ai/checkpoint/AgentCheckpointStorage';
 
 // Provider interface
-interface AgentCheckpointProvider {
+interface AgentCheckpointStorage {
   name: string;
-  storeCheckpoint(checkpoint: NamedAgentCheckpoint): Promise<string>;
-  retrieveCheckpoint(checkpointId: string): Promise<StoredAgentCheckpoint | null>;
-  listCheckpoints(): Promise<AgentCheckpointListItem[]>;
+  storeAgentCheckpoint(checkpoint: NamedAgentCheckpoint): Promise<string>;
+  retrieveAgentCheckpoint(checkpointId: string): Promise<StoredAgentCheckpoint | null>;
+  listAgentCheckpoints(): Promise<AgentCheckpointListItem[]>;
   deleteCheckpoint(checkpointId: string): Promise<boolean>;
+  clearAllCheckpoints(): Promise<void>;
   close(): void;
 }
 ```
