@@ -10,8 +10,9 @@ const packageConfigSchema = z.object({
 });
 
 export default {
-	name: packageJSON.name,
-	version: packageJSON.version,
+ name: packageJSON.name,
+ displayName: "Browser Storage",
+ version: packageJSON.version,
 	description: packageJSON.description,
   install(app, config) {
     if (config.browserStorage) {
