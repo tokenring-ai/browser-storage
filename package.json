@@ -3,7 +3,6 @@
   "description": "Provides browser-based agent state storage for the TokenRing ecosystem using localStorage for persistent checkpoint management.",
   "version": "0.2.0",
   "dependencies": {
-    "@tokenring-ai/agent": "0.2.0",
     "@tokenring-ai/app": "0.2.0",
     "@tokenring-ai/checkpoint": "0.2.0",
     "zod": "^4.3.6",
