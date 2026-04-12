@@ -74,6 +74,7 @@ The storage contains an array of checkpoints. Each checkpoint has the following 
 | createdAt | number | Timestamp of checkpoint creation |
 
 **Important Notes:**
+
 - All agents share the same storage when using the same prefix
 - Use different prefixes to isolate data between applications
 - Storage is limited by browser localStorage constraints (typically 5-10MB per domain)
