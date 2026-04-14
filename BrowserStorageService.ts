@@ -62,7 +62,7 @@ export default class BrowserStorageService
 		try {
 			const stored = localStorage.getItem(this._getStorageKey());
 			return stored ? JSON.parse(stored) : [];
-		} catch (error) {
+		} catch (error: unknown) {
 			console.error(
 				`Error reading agent checkpoints from localStorage:`,
 				error,
@@ -80,7 +80,7 @@ export default class BrowserStorageService
 	_saveAllCheckpoints(checkpoints: StoredAgentCheckpoint[]): void {
 		try {
 			localStorage.setItem(this._getStorageKey(), JSON.stringify(checkpoints));
-		} catch (error) {
+		} catch (error: unknown) {
 			console.error(`Error saving agent checkpoints to localStorage:`, error);
 		}
 	}
