@@ -1,4 +1,4 @@
-import type {TokenRingService} from "@tokenring-ai/app/types";
+import type { TokenRingService } from "@tokenring-ai/app/types";
 import type {
   AgentCheckpointListItem,
   AgentCheckpointStorage,
@@ -6,8 +6,8 @@ import type {
   StoredAgentCheckpoint,
 } from "@tokenring-ai/checkpoint/AgentCheckpointStorage";
 
-import {v4 as uuid} from "uuid";
-import type {ParsedBrowserStorageConfig} from "./schema.ts";
+import { v4 as uuid } from "uuid";
+import type { ParsedBrowserStorageConfig } from "./schema.ts";
 
 /**
  * Browser-based implementation of AgentCheckpointProvider that uses localStorage
@@ -29,161 +29,152 @@ import type {ParsedBrowserStorageConfig} from "./schema.ts";
  *
  * @implements AgentCheckpointStorage
  */
-export default class BrowserStorageService
-  implements TokenRingService, AgentCheckpointStorage {
-	name: string = "BrowserAgentStateStorage";
-  description: string =
-    "Browser-based implementation of AgentCheckpointProvider that uses localStorage for persistent storage of agent state checkpoints.";
+export default class BrowserStorageService implements TokenRingService, AgentCheckpointStorage {
+  name: string = "BrowserAgentStateStorage";
+  description: string = "Browser-based implementation of AgentCheckpointProvider that uses localStorage for persistent storage of agent state checkpoints.";
   displayName: string;
 
-	/**
+  /**
    * Creates a new BrowserStorageService instance.
    * @param options
    */
-	constructor(readonly options: ParsedBrowserStorageConfig) {
+  constructor(readonly options: ParsedBrowserStorageConfig) {
     this.displayName = `BrowserAgentStateStorage (${this.options.storageKeyPrefix})`;
-	}
+  }
 
-	/**
-	 * Gets the localStorage key for storing all checkpoints.
-	 * @private
-	 * @returns The localStorage key
-	 */
-	_getStorageKey(): string {
-		return `${this.options.storageKeyPrefix}checkpoints`;
-	}
+  /**
+   * Gets the localStorage key for storing all checkpoints.
+   * @private
+   * @returns The localStorage key
+   */
+  _getStorageKey(): string {
+    return `${this.options.storageKeyPrefix}checkpoints`;
+  }
 
-	/**
-	 * Retrieves all checkpoints from localStorage.
-	 * @private
-	 * @returns Array of stored checkpoints
-	 */
-	_getAllCheckpoints(): StoredAgentCheckpoint[] {
-		try {
-			const stored = localStorage.getItem(this._getStorageKey());
-			return stored ? JSON.parse(stored) : [];
-		} catch (error: unknown) {
-			console.error(
-				`Error reading agent checkpoints from localStorage:`,
-				error,
-			);
-			return [];
-		}
-	}
+  /**
+   * Retrieves all checkpoints from localStorage.
+   * @private
+   * @returns Array of stored checkpoints
+   */
+  _getAllCheckpoints(): StoredAgentCheckpoint[] {
+    try {
+      const stored = localStorage.getItem(this._getStorageKey());
+      return stored ? JSON.parse(stored) : [];
+    } catch (error: unknown) {
+      console.error(`Error reading agent checkpoints from localStorage:`, error);
+      return [];
+    }
+  }
 
-	/**
-	 * Saves all checkpoints to localStorage.
-	 * @private
-	 * @param checkpoints - Checkpoints to save
-	 * @returns void
-	 */
-	_saveAllCheckpoints(checkpoints: StoredAgentCheckpoint[]): void {
-		try {
-			localStorage.setItem(this._getStorageKey(), JSON.stringify(checkpoints));
-		} catch (error: unknown) {
-			console.error(`Error saving agent checkpoints to localStorage:`, error);
-		}
-	}
+  /**
+   * Saves all checkpoints to localStorage.
+   * @private
+   * @param checkpoints - Checkpoints to save
+   * @returns void
+   */
+  _saveAllCheckpoints(checkpoints: StoredAgentCheckpoint[]): void {
+    try {
+      localStorage.setItem(this._getStorageKey(), JSON.stringify(checkpoints));
+    } catch (error: unknown) {
+      console.error(`Error saving agent checkpoints to localStorage:`, error);
+    }
+  }
 
-	/**
-	 * Stores a new checkpoint for an agent.
-	 *
-	 * @param checkpoint - The checkpoint to store
-	 * @returns The ID of the stored checkpoint
-	 */
-  storeAgentCheckpoint(
-    checkpoint: NamedAgentCheckpoint,
-  ): string {
-		const checkpoints = this._getAllCheckpoints();
-		const now = Date.now();
-		const id = uuid();
+  /**
+   * Stores a new checkpoint for an agent.
+   *
+   * @param checkpoint - The checkpoint to store
+   * @returns The ID of the stored checkpoint
+   */
+  storeAgentCheckpoint(checkpoint: NamedAgentCheckpoint): string {
+    const checkpoints = this._getAllCheckpoints();
+    const now = Date.now();
+    const id = uuid();
 
-		const storedCheckpoint: StoredAgentCheckpoint = {
-			id,
-			agentId: checkpoint.agentId,
-			name: checkpoint.name,
+    const storedCheckpoint: StoredAgentCheckpoint = {
+      id,
+      agentId: checkpoint.agentId,
+      name: checkpoint.name,
       agentType: checkpoint.agentType,
       sessionId: checkpoint.sessionId,
-			state: checkpoint.state,
-			createdAt: checkpoint.createdAt || now,
-		};
+      state: checkpoint.state,
+      createdAt: checkpoint.createdAt || now,
+    };
 
-		checkpoints.push(storedCheckpoint);
-		this._saveAllCheckpoints(checkpoints);
+    checkpoints.push(storedCheckpoint);
+    this._saveAllCheckpoints(checkpoints);
 
-		return id;
-	}
+    return id;
+  }
 
-	/**
-	 * Retrieves a checkpoint by its ID.
-	 *
-	 * @param checkpointId - The checkpoint identifier
-	 * @returns The retrieved checkpoint or null if not found
-	 */
-  retrieveAgentCheckpoint(
-		checkpointId: string,
-  ): StoredAgentCheckpoint | null {
-		const checkpoints = this._getAllCheckpoints();
-		const checkpoint = checkpoints.find((cp) => cp.id === checkpointId);
-		return checkpoint ?? null;
-	}
+  /**
+   * Retrieves a checkpoint by its ID.
+   *
+   * @param checkpointId - The checkpoint identifier
+   * @returns The retrieved checkpoint or null if not found
+   */
+  retrieveAgentCheckpoint(checkpointId: string): StoredAgentCheckpoint | null {
+    const checkpoints = this._getAllCheckpoints();
+    const checkpoint = checkpoints.find(cp => cp.id === checkpointId);
+    return checkpoint ?? null;
+  }
 
-	/**
-	 * Lists all checkpoints ordered by creation time (newest first).
-	 *
-	 * @returns Array of checkpoint list items
-	 */
+  /**
+   * Lists all checkpoints ordered by creation time (newest first).
+   *
+   * @returns Array of checkpoint list items
+   */
   listAgentCheckpoints(): AgentCheckpointListItem[] {
-		const checkpoints = this._getAllCheckpoints();
-		const listItems: AgentCheckpointListItem[] = checkpoints.map((cp) => ({
-			id: cp.id,
-			name: cp.name,
+    const checkpoints = this._getAllCheckpoints();
+    const listItems: AgentCheckpointListItem[] = checkpoints.map(cp => ({
+      id: cp.id,
+      name: cp.name,
       sessionId: cp.sessionId,
       agentType: cp.agentType,
-			agentId: cp.agentId,
-			createdAt: cp.createdAt,
-		}));
+      agentId: cp.agentId,
+      createdAt: cp.createdAt,
+    }));
 
-		return listItems.sort((a, b) => b.createdAt - a.createdAt);
-	}
+    return listItems.sort((a, b) => b.createdAt - a.createdAt);
+  }
 
-	/**
-	 * Clears all checkpoints from storage.
-	 * This method is specific to the browser implementation.
-	 *
-	 * @returns void
-	 */
+  /**
+   * Clears all checkpoints from storage.
+   * This method is specific to the browser implementation.
+   *
+   * @returns void
+   */
   clearAllCheckpoints(): void {
-		this._saveAllCheckpoints([]);
-	}
+    this._saveAllCheckpoints([]);
+  }
 
-	/**
-	 * Deletes a specific checkpoint by ID.
-	 * This method is specific to the browser implementation.
-	 *
-	 * @param checkpointId - The checkpoint identifier to delete
-	 * @returns True if checkpoint was deleted, false if not found
-	 */
+  /**
+   * Deletes a specific checkpoint by ID.
+   * This method is specific to the browser implementation.
+   *
+   * @param checkpointId - The checkpoint identifier to delete
+   * @returns True if checkpoint was deleted, false if not found
+   */
   deleteCheckpoint(checkpointId: string): boolean {
-		const checkpoints = this._getAllCheckpoints();
-		const initialLength = checkpoints.length;
-		const filtered = checkpoints.filter((cp) => cp.id !== checkpointId);
+    const checkpoints = this._getAllCheckpoints();
+    const initialLength = checkpoints.length;
+    const filtered = checkpoints.filter(cp => cp.id !== checkpointId);
 
-		if (filtered.length < initialLength) {
-			this._saveAllCheckpoints(filtered);
-			return true;
-		}
+    if (filtered.length < initialLength) {
+      this._saveAllCheckpoints(filtered);
+      return true;
+    }
 
-		return false;
-	}
+    return false;
+  }
 
-	/**
-	 * Closes any resources used by the service.
-	 * No-op for browser implementation as localStorage doesn't require explicit closing.
-	 *
-	 * @returns void
-	 */
-	close(): void {
-		// No resources to close for localStorage implementation
-	}
+  /**
+   * Closes any resources used by the service.
+   * No-op for browser implementation as localStorage doesn't require explicit closing.
+   *
+   * @returns void
+   */
+  close(): void {
+    // No resources to close for localStorage implementation
+  }
 }
