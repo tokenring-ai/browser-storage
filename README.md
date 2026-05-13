@@ -1,6 +1,7 @@
 # @tokenring-ai/browser-storage
 
-Provides browser-based agent state storage for the TokenRing ecosystem using localStorage for persistent checkpoint management.
+Provides browser-based agent state storage for the TokenRing ecosystem using localStorage for persistent checkpoint
+management.
 
 ## Overview
 
@@ -146,7 +147,7 @@ interface AgentCheckpointListItem {
 ### Basic Storage Operations
 
 ```typescript
-import { BrowserStorageService } from '@tokenring-ai/browser-storage';
+import {BrowserStorageService} from '@tokenring-ai/browser-storage';
 
 // Initialize storage with default prefix
 const storage = new BrowserStorageService({});
@@ -257,7 +258,7 @@ const app = new TokenRingApp({
 ### Real-world Development Workflow
 
 ```typescript
-import { BrowserStorageService } from '@tokenring-ai/browser-storage';
+import {BrowserStorageService} from '@tokenring-ai/browser-storage';
 
 const storage = new BrowserStorageService({});
 

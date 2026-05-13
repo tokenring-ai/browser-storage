@@ -1,7 +1,7 @@
-import type {NamedAgentCheckpoint, StoredAgentCheckpoint} from '@tokenring-ai/checkpoint/AgentCheckpointStorage';
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import BrowserStorageService from './BrowserStorageService';
-import {BrowserStorageServiceConfigSchema} from './schema.ts';
+import type { NamedAgentCheckpoint, StoredAgentCheckpoint } from "@tokenring-ai/checkpoint/AgentCheckpointStorage";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import BrowserStorageService from "./BrowserStorageService";
+import { BrowserStorageServiceConfigSchema } from "./schema.ts";
 
 // Mock localStorage for testing
 interface LocalStorageMock {
@@ -11,6 +11,7 @@ interface LocalStorageMock {
   clear: ReturnType<typeof vi.fn>;
   key: ReturnType<typeof vi.fn>;
   length: number;
+
   [key: string]: any;
 }
 
@@ -29,7 +30,7 @@ const originalLocalStorage = globalThis.localStorage;
 // Helper to parse config through schema
 const parseConfig = (config: unknown) => BrowserStorageServiceConfigSchema.parse(config);
 
-describe('BrowserAgentStateStorage', () => {
+describe("BrowserAgentStateStorage", () => {
   let storage: BrowserStorageService;
   let mockStorageData: Record<string, string>;
 
@@ -45,10 +46,10 @@ describe('BrowserAgentStateStorage', () => {
     localStorageMock.removeItem.mockImplementation((key: string) => {
       delete mockStorageData[key];
     });
-    
+
     // Replace global localStorage with our mock
     globalThis.localStorage = localStorageMock;
-    
+
     // Clear all mocks
     vi.clearAllMocks();
   });
@@ -58,72 +59,72 @@ describe('BrowserAgentStateStorage', () => {
     globalThis.localStorage = originalLocalStorage;
   });
 
-  describe('constructor', () => {
-    it('should initialize with default prefix', () => {
+  describe("constructor", () => {
+    it("should initialize with default prefix", () => {
       const config = parseConfig({});
       storage = new BrowserStorageService(config);
-      expect(storage.options.storageKeyPrefix).toBe('tokenring:');
-      expect(storage.name).toBe('BrowserAgentStateStorage');
+      expect(storage.options.storageKeyPrefix).toBe("tokenring:");
+      expect(storage.name).toBe("BrowserAgentStateStorage");
     });
 
-    it('should initialize with custom prefix', () => {
+    it("should initialize with custom prefix", () => {
       const config = parseConfig({
-        storageKeyPrefix: 'custom_prefix_',
+        storageKeyPrefix: "custom_prefix_",
       });
       storage = new BrowserStorageService(config);
-      expect(storage.options.storageKeyPrefix).toBe('custom_prefix_');
-      expect(storage.name).toBe('BrowserAgentStateStorage');
+      expect(storage.options.storageKeyPrefix).toBe("custom_prefix_");
+      expect(storage.name).toBe("BrowserAgentStateStorage");
     });
   });
 
-  describe('_getStorageKey', () => {
+  describe("_getStorageKey", () => {
     beforeEach(() => {
       const config = parseConfig({});
       storage = new BrowserStorageService(config);
     });
 
-    it('should return correct storage key with default prefix', () => {
+    it("should return correct storage key with default prefix", () => {
       const key = (storage as any)._getStorageKey();
-      expect(key).toBe('tokenring:checkpoints');
+      expect(key).toBe("tokenring:checkpoints");
     });
 
-    it('should return correct storage key with custom prefix', () => {
+    it("should return correct storage key with custom prefix", () => {
       const config = parseConfig({
-        storageKeyPrefix: 'custom_prefix_',
+        storageKeyPrefix: "custom_prefix_",
       });
       storage = new BrowserStorageService(config);
       const key = (storage as any)._getStorageKey();
-      expect(key).toBe('custom_prefix_checkpoints');
+      expect(key).toBe("custom_prefix_checkpoints");
     });
   });
 
-  describe('_getAllCheckpoints', () => {
+  describe("_getAllCheckpoints", () => {
     beforeEach(() => {
       const config = parseConfig({});
       storage = new BrowserStorageService(config);
     });
 
-    it('should return empty array when no data stored', () => {
+    it("should return empty array when no data stored", () => {
       vi.mocked(localStorageMock.getItem).mockReturnValue(null);
       const checkpoints = (storage as any)._getAllCheckpoints();
       expect(checkpoints).toEqual([]);
     });
 
-    it('should return empty array when localStorage throws error', () => {
+    it("should return empty array when localStorage throws error", () => {
       vi.mocked(localStorageMock.getItem).mockImplementation(() => {
-        throw new Error('Storage error');
+        throw new Error("Storage error");
       });
       const checkpoints = (storage as any)._getAllCheckpoints();
       expect(checkpoints).toEqual([]);
     });
 
-    it('should parse and return stored checkpoints', () => {
+    it("should parse and return stored checkpoints", () => {
       const storedData = [
         {
-          id: 'agent1_1234567890',
-          agentId: 'agent1',
-          agentType: 'test-agent',
-          name: 'checkpoint1',
+          id: "agent1_1234567890",
+          agentId: "agent1",
+          agentType: "test-agent",
+          name: "checkpoint1",
           state: { messages: [] },
           createdAt: 1234567890,
         },
@@ -136,19 +137,19 @@ describe('BrowserAgentStateStorage', () => {
     });
   });
 
-  describe('_saveAllCheckpoints', () => {
+  describe("_saveAllCheckpoints", () => {
     beforeEach(() => {
       const config = parseConfig({});
       storage = new BrowserStorageService(config);
     });
 
-    it('should save checkpoints to localStorage', () => {
+    it("should save checkpoints to localStorage", () => {
       const checkpoints: StoredAgentCheckpoint[] = [
         {
-          id: 'agent1_1234567890',
-          agentId: 'agent1',
-          agentType: 'test-agent',
-          name: 'checkpoint1',
+          id: "agent1_1234567890",
+          agentId: "agent1",
+          agentType: "test-agent",
+          name: "checkpoint1",
           state: { messages: [] },
           createdAt: 1234567890,
         },
@@ -156,7 +157,7 @@ describe('BrowserAgentStateStorage', () => {
       (storage as any)._saveAllCheckpoints(checkpoints);
       // Verify the key is correct and data was stored
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'tokenring:checkpoints',
+        "tokenring:checkpoints",
         expect.any(String)
       );
       // Verify the stored data can be parsed
@@ -165,26 +166,26 @@ describe('BrowserAgentStateStorage', () => {
       expect(parsed).toEqual(checkpoints);
     });
 
-    it('should handle storage errors gracefully', () => {
+    it("should handle storage errors gracefully", () => {
       vi.mocked(localStorageMock.setItem).mockImplementation(() => {
-        throw new Error('Storage quota exceeded');
+        throw new Error("Storage quota exceeded");
       });
       const checkpoints: StoredAgentCheckpoint[] = [];
       expect(() => (storage as any)._saveAllCheckpoints(checkpoints)).not.toThrow();
     });
   });
 
-  describe('storeCheckpoint', () => {
+  describe("storeCheckpoint", () => {
     beforeEach(() => {
       const config = parseConfig({});
       storage = new BrowserStorageService(config);
     });
 
-    it('should store checkpoint and return generated ID', async () => {
+    it("should store checkpoint and return generated ID", async () => {
       const checkpoint: NamedAgentCheckpoint = {
-        agentId: 'agent1',
-        agentType: 'test-agent',
-        name: 'test-checkpoint',
+        agentId: "agent1",
+        agentType: "test-agent",
+        name: "test-checkpoint",
         state: { messages: [], context: {} },
         createdAt: 1234567890,
       };
@@ -192,34 +193,34 @@ describe('BrowserAgentStateStorage', () => {
       const id = await storage.storeAgentCheckpoint(checkpoint);
       // UUID format contains dashes
       expect(id).toMatch(/-/);
-      
+
       // Verify checkpoint was stored
       const storedCheckpoints = (storage as any)._getAllCheckpoints();
       expect(storedCheckpoints).toHaveLength(1);
       expect(storedCheckpoints[0]).toMatchObject({
         id,
-        agentId: 'agent1',
-        agentType: 'test-agent',
-        name: 'test-checkpoint',
+        agentId: "agent1",
+        agentType: "test-agent",
+        name: "test-checkpoint",
         state: checkpoint.state,
         createdAt: 1234567890,
       });
     });
 
-    it('should handle multiple checkpoints for same agent', async () => {
+    it("should handle multiple checkpoints for same agent", async () => {
       const checkpoint1: NamedAgentCheckpoint = {
-        agentId: 'agent1',
-        agentType: 'test-agent',
-        name: 'checkpoint1',
+        agentId: "agent1",
+        agentType: "test-agent",
+        name: "checkpoint1",
         state: { messages: [] },
         createdAt: 1234567890,
       };
 
       const checkpoint2: NamedAgentCheckpoint = {
-        agentId: 'agent1',
-        agentType: 'test-agent',
-        name: 'checkpoint2',
-        state: { messages: ['msg1'] },
+        agentId: "agent1",
+        agentType: "test-agent",
+        name: "checkpoint2",
+        state: { messages: ["msg1"] },
         createdAt: 1234567891,
       };
 
@@ -231,39 +232,39 @@ describe('BrowserAgentStateStorage', () => {
       expect(storedCheckpoints).toHaveLength(2);
     });
 
-    it('should use current time when createdAt not provided', async () => {
+    it("should use current time when createdAt not provided", async () => {
       const checkpoint: NamedAgentCheckpoint = {
-        agentId: 'agent1',
-        agentType: 'test-agent',
-        name: 'test-checkpoint',
+        agentId: "agent1",
+        agentType: "test-agent",
+        name: "test-checkpoint",
         state: { messages: [] },
         // createdAt not provided
       };
 
       const id = await storage.storeAgentCheckpoint(checkpoint);
       const storedCheckpoints = (storage as any)._getAllCheckpoints();
-      
+
       expect(storedCheckpoints[0].createdAt).toBeGreaterThan(0);
       expect(id).toMatch(/-/);
     });
   });
 
-  describe('retrieveCheckpoint', () => {
+  describe("retrieveCheckpoint", () => {
     beforeEach(() => {
       const config = parseConfig({});
       storage = new BrowserStorageService(config);
     });
 
-    it('should return null for non-existent checkpoint', async () => {
-      const result = await storage.retrieveAgentCheckpoint('non-existent-id');
+    it("should return null for non-existent checkpoint", async () => {
+      const result = await storage.retrieveAgentCheckpoint("non-existent-id");
       expect(result).toBeNull();
     });
 
-    it('should retrieve stored checkpoint', async () => {
+    it("should retrieve stored checkpoint", async () => {
       const checkpoint: NamedAgentCheckpoint = {
-        agentId: 'agent1',
-        agentType: 'test-agent',
-        name: 'test-checkpoint',
+        agentId: "agent1",
+        agentType: "test-agent",
+        name: "test-checkpoint",
         state: { messages: [] },
         createdAt: 1234567890,
       };
@@ -273,46 +274,46 @@ describe('BrowserAgentStateStorage', () => {
 
       expect(result).not.toBeNull();
       expect(result!.id).toBe(id);
-      expect(result!.agentId).toBe('agent1');
-      expect(result!.agentType).toBe('test-agent');
-      expect(result!.name).toBe('test-checkpoint');
+      expect(result!.agentId).toBe("agent1");
+      expect(result!.agentType).toBe("test-agent");
+      expect(result!.name).toBe("test-checkpoint");
       expect(result!.state).toEqual({ messages: [] });
       expect(result!.createdAt).toBe(1234567890);
     });
   });
 
-  describe('listCheckpoints', () => {
+  describe("listCheckpoints", () => {
     beforeEach(() => {
       const config = parseConfig({});
       storage = new BrowserStorageService(config);
     });
 
-    it('should return empty array when no checkpoints stored', async () => {
+    it("should return empty array when no checkpoints stored", async () => {
       const result = await storage.listAgentCheckpoints();
       expect(result).toEqual([]);
     });
 
-    it('should list all checkpoints ordered by creation time (newest first)', async () => {
+    it("should list all checkpoints ordered by creation time (newest first)", async () => {
       const checkpoint1: NamedAgentCheckpoint = {
-        agentId: 'agent1',
-        agentType: 'test-agent',
-        name: 'checkpoint1',
+        agentId: "agent1",
+        agentType: "test-agent",
+        name: "checkpoint1",
         state: { messages: [] },
         createdAt: 1234567890,
       };
 
       const checkpoint2: NamedAgentCheckpoint = {
-        agentId: 'agent2',
-        agentType: 'test-agent',
-        name: 'checkpoint2',
+        agentId: "agent2",
+        agentType: "test-agent",
+        name: "checkpoint2",
         state: { messages: [] },
         createdAt: 1234567892,
       };
 
       const checkpoint3: NamedAgentCheckpoint = {
-        agentId: 'agent3',
-        agentType: 'test-agent',
-        name: 'checkpoint3',
+        agentId: "agent3",
+        agentType: "test-agent",
+        name: "checkpoint3",
         state: { messages: [] },
         createdAt: 1234567891,
       };
@@ -322,40 +323,40 @@ describe('BrowserAgentStateStorage', () => {
       await storage.storeAgentCheckpoint(checkpoint3);
 
       const result = await storage.listAgentCheckpoints();
-      
+
       expect(result).toHaveLength(3);
       // Should be ordered by createdAt descending (newest first)
       expect(result[0].createdAt).toBe(1234567892);
       expect(result[1].createdAt).toBe(1234567891);
       expect(result[2].createdAt).toBe(1234567890);
-      
+
       // Verify list items have correct structure (no config in list items)
       expect(result[0]).toMatchObject({
         id: expect.stringMatching(/-/),
-        name: 'checkpoint2',
-        agentId: 'agent2',
-        agentType: 'test-agent',
+        name: "checkpoint2",
+        agentId: "agent2",
+        agentType: "test-agent",
         createdAt: 1234567892,
       });
     });
   });
 
-  describe('deleteCheckpoint', () => {
+  describe("deleteCheckpoint", () => {
     beforeEach(() => {
       const config = parseConfig({});
       storage = new BrowserStorageService(config);
     });
 
-    it('should return false for non-existent checkpoint', async () => {
-      const result = await storage.deleteCheckpoint('non-existent-id');
+    it("should return false for non-existent checkpoint", async () => {
+      const result = await storage.deleteCheckpoint("non-existent-id");
       expect(result).toBe(false);
     });
 
-    it('should delete existing checkpoint and return true', async () => {
+    it("should delete existing checkpoint and return true", async () => {
       const checkpoint: NamedAgentCheckpoint = {
-        agentId: 'agent1',
-        agentType: 'test-agent',
-        name: 'test-checkpoint',
+        agentId: "agent1",
+        agentType: "test-agent",
+        name: "test-checkpoint",
         state: { messages: [] },
         createdAt: 1234567890,
       };
@@ -368,19 +369,19 @@ describe('BrowserAgentStateStorage', () => {
       expect((storage as any)._getAllCheckpoints()).toHaveLength(0);
     });
 
-    it('should not affect other checkpoints when deleting one', async () => {
+    it("should not affect other checkpoints when deleting one", async () => {
       const checkpoint1: NamedAgentCheckpoint = {
-        agentId: 'agent1',
-        agentType: 'test-agent',
-        name: 'checkpoint1',
+        agentId: "agent1",
+        agentType: "test-agent",
+        name: "checkpoint1",
         state: { messages: [] },
         createdAt: 1234567890,
       };
 
       const checkpoint2: NamedAgentCheckpoint = {
-        agentId: 'agent2',
-        agentType: 'test-agent',
-        name: 'checkpoint2',
+        agentId: "agent2",
+        agentType: "test-agent",
+        name: "checkpoint2",
         state: { messages: [] },
         createdAt: 1234567891,
       };
@@ -389,32 +390,32 @@ describe('BrowserAgentStateStorage', () => {
       const id2 = await storage.storeAgentCheckpoint(checkpoint2);
 
       await storage.deleteCheckpoint(id1);
-      
+
       const remaining = (storage as any)._getAllCheckpoints();
       expect(remaining).toHaveLength(1);
       expect(remaining[0].id).toBe(id2);
     });
   });
 
-  describe('clearAllCheckpoints', () => {
+  describe("clearAllCheckpoints", () => {
     beforeEach(() => {
       const config = parseConfig({});
       storage = new BrowserStorageService(config);
     });
 
-    it('should clear all checkpoints', async () => {
+    it("should clear all checkpoints", async () => {
       const checkpoint1: NamedAgentCheckpoint = {
-        agentId: 'agent1',
-        agentType: 'test-agent',
-        name: 'checkpoint1',
+        agentId: "agent1",
+        agentType: "test-agent",
+        name: "checkpoint1",
         state: { messages: [] },
         createdAt: 1234567890,
       };
 
       const checkpoint2: NamedAgentCheckpoint = {
-        agentId: 'agent2',
-        agentType: 'test-agent',
-        name: 'checkpoint2',
+        agentId: "agent2",
+        agentType: "test-agent",
+        name: "checkpoint2",
         state: { messages: [] },
         createdAt: 1234567891,
       };
@@ -428,33 +429,33 @@ describe('BrowserAgentStateStorage', () => {
     });
   });
 
-  describe('close', () => {
+  describe("close", () => {
     beforeEach(() => {
       const config = parseConfig({});
       storage = new BrowserStorageService(config);
     });
 
-    it('should be a no-op method', () => {
+    it("should be a no-op method", () => {
       expect(() => storage.close()).not.toThrow();
       // Verify no side effects after close
-      expect(storage.name).toBe('BrowserAgentStateStorage');
-      expect(storage.options.storageKeyPrefix).toBe('tokenring:');
+      expect(storage.name).toBe("BrowserAgentStateStorage");
+      expect(storage.options.storageKeyPrefix).toBe("tokenring:");
     });
   });
 
-  describe('Integration scenarios', () => {
+  describe("Integration scenarios", () => {
     beforeEach(() => {
-      const config = parseConfig({ storageKeyPrefix: 'test_app_' });
+      const config = parseConfig({ storageKeyPrefix: "test_app_" });
       storage = new BrowserStorageService(config);
     });
 
-    it('should handle complete checkpoint lifecycle', async () => {
+    it("should handle complete checkpoint lifecycle", async () => {
       // Store checkpoint
       const checkpoint: NamedAgentCheckpoint = {
-        agentId: 'test-agent',
-        agentType: 'test-agent',
-        name: 'integration-test',
-        state: { messages: ['Hello'], context: { user: 'test' } },
+        agentId: "test-agent",
+        agentType: "test-agent",
+        name: "integration-test",
+        state: { messages: ["Hello"], context: { user: "test" } },
         createdAt: 1234567890,
       };
 
@@ -463,17 +464,17 @@ describe('BrowserAgentStateStorage', () => {
       // Retrieve checkpoint
       const retrieved = await storage.retrieveAgentCheckpoint(id);
       expect(retrieved).not.toBeNull();
-      expect(retrieved!.name).toBe('integration-test');
-      expect(retrieved!.state).toEqual({ messages: ['Hello'], context: { user: 'test' } });
+      expect(retrieved!.name).toBe("integration-test");
+      expect(retrieved!.state).toEqual({ messages: ["Hello"], context: { user: "test" } });
 
       // List checkpoints
       const listed = await storage.listAgentCheckpoints();
       expect(listed).toHaveLength(1);
       expect(listed[0]).toMatchObject({
         id,
-        name: 'integration-test',
-        agentId: 'test-agent',
-        agentType: 'test-agent',
+        name: "integration-test",
+        agentId: "test-agent",
+        agentType: "test-agent",
         createdAt: 1234567890,
       });
 
@@ -486,84 +487,84 @@ describe('BrowserAgentStateStorage', () => {
       expect(retrievedAfterDelete).toBeNull();
     });
 
-    it('should isolate data with different prefixes', async () => {
-      const config1 = parseConfig({ storageKeyPrefix: 'app1_' });
-      const config2 = parseConfig({ storageKeyPrefix: 'app2_' });
+    it("should isolate data with different prefixes", async () => {
+      const config1 = parseConfig({ storageKeyPrefix: "app1_" });
+      const config2 = parseConfig({ storageKeyPrefix: "app2_" });
       const storage1 = new BrowserStorageService(config1);
       const storage2 = new BrowserStorageService(config2);
 
       const checkpoint1: NamedAgentCheckpoint = {
-        agentId: 'agent1',
-        agentType: 'test-agent',
-        name: 'checkpoint1',
+        agentId: "agent1",
+        agentType: "test-agent",
+        name: "checkpoint1",
         state: { messages: [] },
         createdAt: 1234567890,
       };
 
       const checkpoint2: NamedAgentCheckpoint = {
-        agentId: 'agent1',
-        agentType: 'test-agent',
-        name: 'checkpoint2',
+        agentId: "agent1",
+        agentType: "test-agent",
+        name: "checkpoint2",
         state: { messages: [] },
         createdAt: 1234567891,
       };
 
       // Store in storage1
       const id1 = await storage1.storeAgentCheckpoint(checkpoint1);
-      
+
       // Store in storage2
       const id2 = await storage2.storeAgentCheckpoint(checkpoint2);
 
       // Verify isolation
       expect(await storage1.listAgentCheckpoints()).toHaveLength(1);
       expect(await storage2.listAgentCheckpoints()).toHaveLength(1);
-      
+
       expect(await storage1.retrieveAgentCheckpoint(id1)).not.toBeNull();
       expect(await storage1.retrieveAgentCheckpoint(id2)).toBeNull();
-      
+
       expect(await storage2.retrieveAgentCheckpoint(id2)).not.toBeNull();
       expect(await storage2.retrieveAgentCheckpoint(id1)).toBeNull();
     });
   });
 
-  describe('Error handling', () => {
+  describe("Error handling", () => {
     beforeEach(() => {
       const config = parseConfig({});
       storage = new BrowserStorageService(config);
     });
 
-    it('should handle localStorage quota exceeded', async () => {
+    it("should handle localStorage quota exceeded", async () => {
       vi.mocked(localStorageMock.setItem).mockImplementation(() => {
-        throw new Error('QuotaExceededError: The quota has been exceeded.');
+        throw new Error("QuotaExceededError: The quota has been exceeded.");
       });
 
       const checkpoint: NamedAgentCheckpoint = {
-        agentId: 'agent1',
-        agentType: 'test-agent',
-        name: 'test-checkpoint',
+        agentId: "agent1",
+        agentType: "test-agent",
+        name: "test-checkpoint",
         state: { messages: [] },
         createdAt: 1234567890,
       };
 
       // Should not throw error, but checkpoint won't be stored
       const id = await storage.storeAgentCheckpoint(checkpoint);
-      
+
       // Verify checkpoint wasn't stored due to error
       const storedCheckpoints = (storage as any)._getAllCheckpoints();
       expect(storedCheckpoints).toHaveLength(0);
     });
 
-    it('should handle malformed JSON in localStorage', () => {
-      vi.mocked(localStorageMock.getItem).mockReturnValue('invalid-json');
-      
+    it("should handle malformed JSON in localStorage", () => {
+      vi.mocked(localStorageMock.getItem).mockReturnValue("invalid-json");
+
       const checkpoints = (storage as any)._getAllCheckpoints();
       expect(checkpoints).toEqual([]);
     });
 
-    it('should handle localStorage unavailable', () => {
+    it("should handle localStorage unavailable", () => {
       // Mock localStorage unavailable
       globalThis.localStorage = undefined as any;
-      
+
       expect(() => {
         const config = parseConfig({});
         storage = new BrowserStorageService(config);

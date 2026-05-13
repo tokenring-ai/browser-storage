@@ -1,7 +1,7 @@
-import type {NamedAgentCheckpoint, StoredAgentCheckpoint} from '@tokenring-ai/checkpoint/AgentCheckpointStorage';
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import BrowserStorageService from './BrowserStorageService';
-import {BrowserStorageServiceConfigSchema} from './schema.ts';
+import type { NamedAgentCheckpoint, StoredAgentCheckpoint } from "@tokenring-ai/checkpoint/AgentCheckpointStorage";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import BrowserStorageService from "./BrowserStorageService";
+import { BrowserStorageServiceConfigSchema } from "./schema.ts";
 
 // Mock localStorage for integration tests
 interface LocalStorageMock {
@@ -11,6 +11,7 @@ interface LocalStorageMock {
   clear: ReturnType<typeof vi.fn>;
   key: ReturnType<typeof vi.fn>;
   length: number;
+
   [key: string]: any;
 }
 
@@ -29,7 +30,7 @@ const originalLocalStorage = globalThis.localStorage;
 // Helper to parse config through schema
 const parseConfig = (config: unknown) => BrowserStorageServiceConfigSchema.parse(config);
 
-describe('BrowserAgentStateStorage Integration Tests', () => {
+describe("BrowserAgentStateStorage Integration Tests", () => {
   let storage: BrowserStorageService;
   let mockStorageData: Record<string, string>;
 
@@ -45,7 +46,7 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
     localStorageMock.removeItem.mockImplementation((key: string) => {
       delete mockStorageData[key];
     });
-    
+
     // Replace global localStorage with our mock
     globalThis.localStorage = localStorageMock;
   });
@@ -53,31 +54,31 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
   afterEach(() => {
     // Restore original localStorage
     globalThis.localStorage = originalLocalStorage;
-    
+
     // Clear all data
     mockStorageData = {};
     vi.clearAllMocks();
   });
 
-  describe('Real-world usage scenarios', () => {
+  describe("Real-world usage scenarios", () => {
     beforeEach(() => {
       const config = parseConfig({});
       storage = new BrowserStorageService(config);
     });
 
-    it('should handle agent development workflow', async () => {
+    it("should handle agent development workflow", async () => {
       // Simulate a typical development workflow with multiple checkpoints
-      
+
       // 1. Initial development state
       const initialCheckpoint: NamedAgentCheckpoint = {
-        agentId: 'dev-agent-001',
-        agentType: 'developer',
-        name: 'initial-development',
+        agentId: "dev-agent-001",
+        agentType: "developer",
+        name: "initial-development",
         state: {
           messages: [],
           context: {
-            project: 'todo-app',
-            phase: 'initialization',
+            project: "todo-app",
+            phase: "initialization",
           },
         },
         createdAt: Date.now() - 3600000, // 1 hour ago
@@ -88,18 +89,18 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
 
       // 2. Feature implementation checkpoint
       const featureCheckpoint: NamedAgentCheckpoint = {
-        agentId: 'dev-agent-001',
-        agentType: 'developer',
-        name: 'feature-implementation',
+        agentId: "dev-agent-001",
+        agentType: "developer",
+        name: "feature-implementation",
         state: {
           messages: [
-            { role: 'user', content: 'Implement todo feature' },
-            { role: 'assistant', content: 'Generated todo component' },
+            { role: "user", content: "Implement todo feature" },
+            { role: "assistant", content: "Generated todo component" },
           ],
           context: {
-            project: 'todo-app',
-            phase: 'feature-development',
-            features: ['create', 'read', 'update', 'delete'],
+            project: "todo-app",
+            phase: "feature-development",
+            features: ["create", "read", "update", "delete"],
           },
         },
         createdAt: Date.now() - 1800000, // 30 minutes ago
@@ -109,18 +110,18 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
 
       // 3. Testing phase checkpoint
       const testingCheckpoint: NamedAgentCheckpoint = {
-        agentId: 'dev-agent-001',
-        agentType: 'developer',
-        name: 'testing-phase',
+        agentId: "dev-agent-001",
+        agentType: "developer",
+        name: "testing-phase",
         state: {
           messages: [
-            { role: 'user', content: 'Run tests' },
-            { role: 'assistant', content: 'All tests passed' },
+            { role: "user", content: "Run tests" },
+            { role: "assistant", content: "All tests passed" },
           ],
           context: {
-            project: 'todo-app',
-            phase: 'testing',
-            testResults: 'passed',
+            project: "todo-app",
+            phase: "testing",
+            testResults: "passed",
             coverage: 85,
           },
         },
@@ -141,9 +142,9 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       // Verify individual checkpoint retrieval
       const retrievedTesting = await storage.retrieveAgentCheckpoint(testingId);
       expect(retrievedTesting).not.toBeNull();
-      expect(retrievedTesting!.name).toBe('testing-phase');
-      expect(retrievedTesting!.agentType).toBe('developer');
-      expect(retrievedTesting!.state.context.phase).toBe('testing');
+      expect(retrievedTesting!.name).toBe("testing-phase");
+      expect(retrievedTesting!.agentType).toBe("developer");
+      expect(retrievedTesting!.state.context.phase).toBe("testing");
 
       // Simulate removing outdated checkpoints
       const deleted = await storage.deleteCheckpoint(initialId);
@@ -153,18 +154,18 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       expect(remainingCheckpoints).toHaveLength(2);
     });
 
-    it('should handle content creation workflow', async () => {
+    it("should handle content creation workflow", async () => {
       // Simulate a content creation agent workflow
-      
+
       const planningCheckpoint: NamedAgentCheckpoint = {
-        agentId: 'content-agent-001',
-        agentType: 'content-creator',
-        name: 'content-planning',
+        agentId: "content-agent-001",
+        agentType: "content-creator",
+        name: "content-planning",
         state: {
           messages: [],
           context: {
-            project: 'blog-series',
-            topic: 'AI development',
+            project: "blog-series",
+            topic: "AI development",
             plannedArticles: 5,
           },
         },
@@ -172,38 +173,38 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       };
 
       const draftingCheckpoint: NamedAgentCheckpoint = {
-        agentId: 'content-agent-001',
-        agentType: 'content-creator',
-        name: 'drafting-article-1',
+        agentId: "content-agent-001",
+        agentType: "content-creator",
+        name: "drafting-article-1",
         state: {
           messages: [
-            { role: 'user', content: 'Write introduction' },
-            { role: 'assistant', content: 'Drafted introduction paragraph' },
+            { role: "user", content: "Write introduction" },
+            { role: "assistant", content: "Drafted introduction paragraph" },
           ],
           context: {
-            project: 'blog-series',
-            article: 'getting-started-with-ai',
+            project: "blog-series",
+            article: "getting-started-with-ai",
             wordCount: 1200,
-            status: 'draft',
+            status: "draft",
           },
         },
         createdAt: Date.now() - 3600000, // 1 hour ago
       };
 
       const finalizingCheckpoint: NamedAgentCheckpoint = {
-        agentId: 'content-agent-001',
-        agentType: 'content-creator',
-        name: 'finalizing-article',
+        agentId: "content-agent-001",
+        agentType: "content-creator",
+        name: "finalizing-article",
         state: {
           messages: [
-            { role: 'user', content: 'Review and finalize' },
-            { role: 'assistant', content: 'Finalized content ready for publication' },
+            { role: "user", content: "Review and finalize" },
+            { role: "assistant", content: "Finalized content ready for publication" },
           ],
           context: {
-            project: 'blog-series',
-            article: 'getting-started-with-ai',
+            project: "blog-series",
+            article: "getting-started-with-ai",
             wordCount: 1850,
-            status: 'final',
+            status: "final",
             reviewed: true,
           },
         },
@@ -220,32 +221,32 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
 
       // Verify the progression through phases
       const retrievedFinal = await storage.retrieveAgentCheckpoint(finalizingId);
-      expect(retrievedFinal!.state.context.status).toBe('final');
+      expect(retrievedFinal!.state.context.status).toBe("final");
 
       const retrievedDraft = await storage.retrieveAgentCheckpoint(draftingId);
-      expect(retrievedDraft!.state.context.status).toBe('draft');
+      expect(retrievedDraft!.state.context.status).toBe("draft");
     });
 
-    it('should handle multiple agents with different prefixes', async () => {
-      const devConfig = parseConfig({ storageKeyPrefix: 'dev_agents_' });
+    it("should handle multiple agents with different prefixes", async () => {
+      const devConfig = parseConfig({ storageKeyPrefix: "dev_agents_" });
       const devStorage = new BrowserStorageService(devConfig);
 
-      const contentConfig = parseConfig({ storageKeyPrefix: 'content_agents_' });
+      const contentConfig = parseConfig({ storageKeyPrefix: "content_agents_" });
       const contentStorage = new BrowserStorageService(contentConfig);
 
       const devCheckpoint: NamedAgentCheckpoint = {
-        agentId: 'dev-001',
-        agentType: 'developer',
-        name: 'dev-checkpoint',
-        state: { messages: [], context: { project: 'api' } },
+        agentId: "dev-001",
+        agentType: "developer",
+        name: "dev-checkpoint",
+        state: { messages: [], context: { project: "api" } },
         createdAt: Date.now() - 1800000,
       };
 
       const contentCheckpoint: NamedAgentCheckpoint = {
-        agentId: 'content-001',
-        agentType: 'content-creator',
-        name: 'content-checkpoint',
-        state: { messages: [], context: { project: 'blog' } },
+        agentId: "content-001",
+        agentType: "content-creator",
+        name: "content-checkpoint",
+        state: { messages: [], context: { project: "blog" } },
         createdAt: Date.now() - 900000,
       };
 
@@ -269,28 +270,28 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       expect(contentInDev).toBeNull();
     });
 
-    it('should handle large data storage', async () => {
+    it("should handle large data storage", async () => {
       // Simulate storing large checkpoint data
       const largeCheckpoint: NamedAgentCheckpoint = {
-        agentId: 'large-data-agent',
-        agentType: 'data-processor',
-        name: 'large-data-checkpoint',
+        agentId: "large-data-agent",
+        agentType: "data-processor",
+        name: "large-data-checkpoint",
         state: {
           messages: Array(100).fill(0).map((_, i) => ({
-            role: i % 2 === 0 ? 'user' : 'assistant',
-            content: `Message ${i}: ${'x'.repeat(100)}`, // 100 chars per message
+            role: i % 2 === 0 ? "user" : "assistant",
+            content: `Message ${i}: ${"x".repeat(100)}`, // 100 chars per message
           })),
           context: {
             largeData: Array(1000).fill(0).map((_, i) => ({
               id: i,
-              data: 'x'.repeat(200),
+              data: "x".repeat(200),
               metadata: { timestamp: Date.now() + i },
             })),
             nested: {
               level1: {
                 level2: {
                   level3: {
-                    value: 'deeply nested data',
+                    value: "deeply nested data",
                   },
                 },
               },
@@ -307,42 +308,42 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       expect(retrieved).not.toBeNull();
       expect(retrieved!.state.messages).toHaveLength(100);
       expect(retrieved!.state.context.largeData).toHaveLength(1000);
-      expect(retrieved!.state.context.nested.level1.level2.level3.value).toBe('deeply nested data');
+      expect(retrieved!.state.context.nested.level1.level2.level3.value).toBe("deeply nested data");
     });
 
-    it('should handle storage quota scenarios', async () => {
+    it("should handle storage quota scenarios", async () => {
       // Simulate quota exceeded scenarios by mocking setItem to throw
       localStorageMock.setItem.mockImplementation(() => {
-        throw new Error('QuotaExceededError: The quota has been exceeded.');
+        throw new Error("QuotaExceededError: The quota has been exceeded.");
       });
 
       const checkpoint: NamedAgentCheckpoint = {
-        agentId: 'quota-test-agent',
-        agentType: 'test-agent',
-        name: 'quota-test-checkpoint',
+        agentId: "quota-test-agent",
+        agentType: "test-agent",
+        name: "quota-test-checkpoint",
         state: { messages: [] },
         createdAt: Date.now(),
       };
 
       // Should handle quota exceeded gracefully
       const id = await storage.storeAgentCheckpoint(checkpoint);
-      
+
       // Verify checkpoint wasn't stored due to quota error
       const checkpoints = await storage.listAgentCheckpoints();
       expect(checkpoints).toHaveLength(0);
     });
 
-    it('should handle data corruption recovery', async () => {
+    it("should handle data corruption recovery", async () => {
       // Simulate corrupted data in localStorage
-      mockStorageData['tokenring:checkpoints'] = 'corrupted-json-data';
+      mockStorageData["tokenring:checkpoints"] = "corrupted-json-data";
 
       const checkpoints = await storage.listAgentCheckpoints();
       expect(checkpoints).toEqual([]);
 
       const checkpoint: NamedAgentCheckpoint = {
-        agentId: 'recovery-test-agent',
-        agentType: 'test-agent',
-        name: 'recovery-test-checkpoint',
+        agentId: "recovery-test-agent",
+        agentType: "test-agent",
+        name: "recovery-test-checkpoint",
         state: { messages: [] },
         createdAt: Date.now(),
       };
@@ -352,29 +353,29 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
 
       const retrieved = await storage.retrieveAgentCheckpoint(id);
       expect(retrieved).not.toBeNull();
-      expect(retrieved!.name).toBe('recovery-test-checkpoint');
+      expect(retrieved!.name).toBe("recovery-test-checkpoint");
     });
 
-    it('should maintain data consistency across operations', async () => {
+    it("should maintain data consistency across operations", async () => {
       const checkpoint: NamedAgentCheckpoint = {
-        agentId: 'consistency-test-agent',
-        agentType: 'test-agent',
-        name: 'consistency-test-checkpoint',
-        state: { messages: ['msg1', 'msg2'], context: { key: 'value' } },
+        agentId: "consistency-test-agent",
+        agentType: "test-agent",
+        name: "consistency-test-checkpoint",
+        state: { messages: ["msg1", "msg2"], context: { key: "value" } },
         createdAt: 1234567890,
       };
 
       // Store checkpoint
       const id = await storage.storeAgentCheckpoint(checkpoint);
-      
+
       // Retrieve and verify
       const retrieved = await storage.retrieveAgentCheckpoint(id);
       expect(retrieved).not.toBeNull();
-      
+
       // Update data and verify consistency
       const updatedCheckpoint: StoredAgentCheckpoint = {
         ...retrieved!,
-        state: { messages: ['msg1', 'msg2', 'msg3'], context: { key: 'updated-value' } },
+        state: { messages: ["msg1", "msg2", "msg3"], context: { key: "updated-value" } },
       };
 
       // Store updated version
@@ -399,8 +400,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
     });
   });
 
-  describe('Performance scenarios', () => {
-    it('should handle rapid checkpoint creation', async () => {
+  describe("Performance scenarios", () => {
+    it("should handle rapid checkpoint creation", async () => {
       const config = parseConfig({});
       storage = new BrowserStorageService(config);
 
@@ -410,8 +411,8 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       // Create 50 checkpoints rapidly
       for (let i = 0; i < 50; i++) {
         const checkpoint: NamedAgentCheckpoint = {
-          agentId: 'perf-test-agent',
-          agentType: 'test-agent',
+          agentId: "perf-test-agent",
+          agentType: "test-agent",
           name: `rapid-checkpoint-${i}`,
           state: { messages: [`message-${i}`], iteration: i },
           createdAt: startTime + i,
@@ -433,22 +434,22 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       const randomId = checkpointIds[25];
       const randomCheckpoint = await storage.retrieveAgentCheckpoint(randomId);
       expect(randomCheckpoint).not.toBeNull();
-      expect(randomCheckpoint!.name).toBe('rapid-checkpoint-25');
+      expect(randomCheckpoint!.name).toBe("rapid-checkpoint-25");
     });
 
-    it('should handle batch operations efficiently', async () => {
-      const config = parseConfig({ storageKeyPrefix: 'batch_test_' });
+    it("should handle batch operations efficiently", async () => {
+      const config = parseConfig({ storageKeyPrefix: "batch_test_" });
       storage = new BrowserStorageService(config);
 
       // Create checkpoints for different agents
-      const agentIds = ['agent-1', 'agent-2', 'agent-3'];
+      const agentIds = ["agent-1", "agent-2", "agent-3"];
       const checkpointData = [];
 
       for (const agentId of agentIds) {
         for (let i = 0; i < 10; i++) {
           checkpointData.push({
             agentId,
-            agentType: 'test-agent',
+            agentType: "test-agent",
             name: `checkpoint-${i}`,
             state: { messages: [], iteration: i },
             createdAt: Date.now() + i,
@@ -470,9 +471,9 @@ describe('BrowserAgentStateStorage Integration Tests', () => {
       expect(allCheckpoints).toHaveLength(30);
 
       // Verify agent-specific filtering by manual inspection
-      const agent1Checkpoints = allCheckpoints.filter(cp => cp.agentId === 'agent-1');
-      const agent2Checkpoints = allCheckpoints.filter(cp => cp.agentId === 'agent-2');
-      const agent3Checkpoints = allCheckpoints.filter(cp => cp.agentId === 'agent-3');
+      const agent1Checkpoints = allCheckpoints.filter(cp => cp.agentId === "agent-1");
+      const agent2Checkpoints = allCheckpoints.filter(cp => cp.agentId === "agent-2");
+      const agent3Checkpoints = allCheckpoints.filter(cp => cp.agentId === "agent-3");
 
       expect(agent1Checkpoints).toHaveLength(10);
       expect(agent2Checkpoints).toHaveLength(10);
