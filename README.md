@@ -1,20 +1,14 @@
 # @tokenring-ai/browser-storage
 
-Provides browser-based agent state storage for the TokenRing ecosystem using localStorage for persistent checkpoint
-management.
-
 ## Overview
 
-The Browser Agent Storage package implements a browser-based storage provider for TokenRing AI agents, providing
-persistent state management through the browser's localStorage API. This implementation enables agents to store and
-retrieve their state checkpoints locally within the browser environment.
+The `@tokenring-ai/browser-storage` package provides browser-based agent state storage for the TokenRing ecosystem using localStorage for persistent checkpoint management. It implements the `AgentCheckpointStorage` interface and integrates seamlessly with the TokenRing checkpoint system.
 
 ### Key Features
 
 - **Browser-based Storage**: Uses localStorage for persistent agent state storage
 - **Checkpoint Management**: Full CRUD operations for agent state checkpoints
-- **TokenRing Integration**: Seamlessly integrates with the TokenRing checkpoint system via the `AgentCheckpointStorage`
-  interface
+- **TokenRing Integration**: Seamlessly integrates with the TokenRing checkpoint system via the `AgentCheckpointStorage` interface
 - **Agent-specific Storage**: Supports multiple agents with configurable storage isolation via prefixes
 - **Cross-platform Compatibility**: Works across all modern browsers supporting localStorage
 - **Type-safe Implementation**: Full TypeScript support with Zod schema validation
@@ -24,7 +18,7 @@ retrieve their state checkpoints locally within the browser environment.
 ## Installation
 
 ```bash
-bun install @tokenring-ai/browser-storage
+bun add @tokenring-ai/browser-storage
 ```
 
 ## Package Structure
@@ -88,7 +82,7 @@ The storage contains an array of checkpoints. Each checkpoint has the following 
 The package exports the following types and interfaces:
 
 ```typescript
-// Main class
+// Main class (named export)
 import { BrowserStorageService } from '@tokenring-ai/browser-storage';
 
 // Zod schema for validation
@@ -147,7 +141,7 @@ interface AgentCheckpointListItem {
 ### Basic Storage Operations
 
 ```typescript
-import {BrowserStorageService} from '@tokenring-ai/browser-storage';
+import { BrowserStorageService } from '@tokenring-ai/browser-storage';
 
 // Initialize storage with default prefix
 const storage = new BrowserStorageService({});
@@ -240,6 +234,9 @@ const contentInDev = devStorage.retrieveAgentCheckpoint(contentId); // null
 The plugin automatically registers the browser storage provider when configured:
 
 ```typescript
+import { TokenRingApp } from '@tokenring-ai/app';
+import BrowserAgentStoragePlugin from '@tokenring-ai/browser-storage/plugin';
+
 // In your TokenRing app configuration
 const app = new TokenRingApp({
   plugins: [
@@ -258,7 +255,7 @@ const app = new TokenRingApp({
 ### Real-world Development Workflow
 
 ```typescript
-import {BrowserStorageService} from '@tokenring-ai/browser-storage';
+import { BrowserStorageService } from '@tokenring-ai/browser-storage';
 
 const storage = new BrowserStorageService({});
 
@@ -484,9 +481,9 @@ listAgentCheckpoints(): AgentCheckpointListItem[]
 ```typescript
 const checkpoints = storage.listAgentCheckpoints();
 // Returns: [
-//   { id, name, config, agentId, agentType, sessionId, createdAt }, // newest
-//   { id, name, config, agentId, agentType, sessionId, createdAt },
-//   { id, name, config, agentId, agentType, sessionId, createdAt }  // oldest
+//   { id, name, agentId, agentType, sessionId, createdAt }, // newest
+//   { id, name, agentId, agentType, sessionId, createdAt },
+//   { id, name, agentId, agentType, sessionId, createdAt }  // oldest
 // ]
 ```
 
@@ -663,6 +660,20 @@ The implementation includes robust error handling for common scenarios:
 4. **Use Prefixes for Isolation**: Use different prefixes for different applications
 5. **Handle Errors Gracefully**: Always handle potential storage errors in production code
 6. **Test in Target Browser**: Test storage behavior in all target browsers
+
+## Dependencies
+
+### Production Dependencies
+
+- `@tokenring-ai/app` (workspace:*) - TokenRing application framework
+- `@tokenring-ai/checkpoint` (workspace:*) - Checkpoint management interface
+- `zod` (^4.3.6) - Schema validation
+- `uuid` (14.0.0) - Unique ID generation (UUID v4)
+
+### Development Dependencies
+
+- `vitest` (^4.1.1) - Testing framework
+- `typescript` (^6.0.2) - TypeScript compiler
 
 ## Version History
 
